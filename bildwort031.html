@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Übung: 10er Bild-Wort-Zuordnung</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --bg-color: #f4f7f9;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --card-bg: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-size: 1.3rem;
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+        .instruction {
+            text-align: center;
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        /* Wort-Pool */
+        .word-pool {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            padding: 12px;
+            background: #fdfdfd;
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .word-item {
+            background: var(--accent-color);
+            color: white;
+            padding: 8px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            user-select: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .word-item.selected {
+            background: var(--primary-color);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+        }
+
+        .word-item.hidden {
+            visibility: hidden;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Bild-Grid */
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 12px;
+        }
+
+        .image-card {
+            background: var(--card-bg);
+            border: 2px solid #eee;
+            border-radius: 10px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: all 0.3s;
+        }
+
+        .emoji-display {
+            font-size: 2.8rem;
+            margin-bottom: 8px;
+            cursor: default;
+        }
+
+        .drop-zone {
+            width: 100%;
+            min-height: 38px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.8rem;
+            text-align: center;
+            color: var(--primary-color);
+            background: #fafafa;
+            cursor: pointer;
+            padding: 2px;
+        }
+
+        .image-card.correct {
+            border-color: var(--success-color);
+            background-color: #e8f5e9;
+        }
+
+        .image-card.wrong {
+            border-color: var(--error-color);
+            animation: shake 0.4s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
+        }
+
+        .controls {
+            margin-top: 25px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        button {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        #solution-btn { background: #f39c12; color: white; }
+        #reset-btn { background: #95a5a6; color: white; }
+
+        #feedback {
+            text-align: center;
+            margin-top: 15px;
+            font-weight: bold;
+            min-height: 1.2em;
+        }
+
+        @media (max-width: 480px) {
+            .image-grid { grid-template-columns: 1fr 1fr; } /* 2 Spalten auf Handys */
+            .emoji-display { font-size: 2.2rem; }
+            .word-item { font-size: 0.8rem; padding: 6px 10px; }
+            .controls { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Vokabel-Bild-Check</h1>
+    <p class="instruction">Wähle ein Wort und tippe auf das passende Feld (?) unter dem Bild.</p>
+
+    <div id="word-pool" class="word-pool"></div>
+
+    <div id="image-grid" class="image-grid"></div>
+
+    <div id="feedback"></div>
+
+    <div class="controls">
+        <button id="solution-btn">Lösung anzeigen</button>
+        <button id="reset-btn">Neu mischen</button>
+    </div>
+</div>
+
+<script>
+    const vocabulary = [
+        { id: 1, word: "Багаж", emoji: "🧳" },
+        { id: 2, word: "Паспорт", emoji: "🛂" },
+        { id: 3, word: "Место у окна", emoji: "🪟" },
+        { id: 4, word: "Самолет", emoji: "✈️" },
+        { id: 5, word: "Посадочный талон", emoji: "🎫" },
+        { id: 6, word: "Ручная кладь", emoji: "🎒" },
+        { id: 7, word: "Таможня", emoji: "🛃" },
+        { id: 8, word: "Билет", emoji: "🎟️" },
+        { id: 9, word: "Выход", emoji: "🚪" },
+        { id: 10, word: "Виза", emoji: "📑" }
+    ];
+
+    let selectedWordData = null;
+    let matchesFound = 0;
+
+    function shuffle(array) {
+        return array.sort(() => Math.random() - 0.5);
+    }
+
+    function initGame() {
+        const wordPool = document.getElementById('word-pool');
+        const imageGrid = document.getElementById('image-grid');
+        const feedback = document.getElementById('feedback');
+        
+        wordPool.innerHTML = '';
+        imageGrid.innerHTML = '';
+        feedback.textContent = '';
+        selectedWordData = null;
+        matchesFound = 0;
+
+        const shuffledWords = shuffle([...vocabulary]);
+        const shuffledImages = shuffle([...vocabulary]);
+
+        shuffledWords.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'word-item';
+            div.textContent = item.word;
+            div.onclick = () => {
+                document.querySelectorAll('.word-item').forEach(el => el.classList.remove('selected'));
+                div.classList.add('selected');
+                selectedWordData = { element: div, item: item };
+            };
+            wordPool.appendChild(div);
+        });
+
+        shuffledImages.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'image-card';
+            card.innerHTML = `
+                <div class="emoji-display">${item.emoji}</div>
+                <div class="drop-zone" onclick="checkMatch(this, ${item.id})">?</div>
+            `;
+            imageGrid.appendChild(card);
+        });
+    }
+
+    function checkMatch(zone, imageId) {
+        if (!selectedWordData) return;
+
+        const card = zone.parentElement;
+
+        if (selectedWordData.item.id === imageId) {
+            zone.textContent = selectedWordData.item.word;
+            zone.onclick = null;
+            card.classList.add('correct');
+            selectedWordData.element.classList.add('hidden');
+            selectedWordData = null;
+            matchesFound++;
+
+            if (matchesFound === vocabulary.length) {
+                const fb = document.getElementById('feedback');
+                fb.textContent = "Hervorragend! Alles gelernt.";
+                fb.style.color = "var(--success-color)";
+            }
+        } else {
+            card.classList.add('wrong');
+            setTimeout(() => card.classList.remove('wrong'), 400);
+            document.querySelectorAll('.word-item').forEach(el => el.classList.remove('selected'));
+            selectedWordData = null;
+        }
+    }
+
+    document.getElementById('solution-btn').onclick = () => {
+        initGame(); // Reset first to clear states
+        const zones = document.querySelectorAll('.drop-zone');
+        const cards = document.querySelectorAll('.image-card');
+        const words = document.querySelectorAll('.word-item');
+
+        vocabulary.forEach(item => {
+            const card = Array.from(cards).find(c => c.querySelector('.emoji-display').textContent === item.emoji);
+            const zone = card.querySelector('.drop-zone');
+            zone.textContent = item.word;
+            card.classList.add('correct');
+        });
+
+        words.forEach(w => w.classList.add('hidden'));
+        document.getElementById('feedback').textContent = "Hier ist die vollständige Zuordnung.";
+        document.getElementById('feedback').style.color = "#f39c12";
+    };
+
+    document.getElementById('reset-btn').onclick = initGame;
+
+    initGame();
+</script>
+
+</body>
+</html>
