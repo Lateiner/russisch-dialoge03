@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Übung: Farbiges Matching</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --bg-color: #f0f4f8;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --selected-color: #3498db;
+            --solution-btn-color: #f39c12;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-size: 1.4rem;
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .instruction {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #555;
+            margin-bottom: 25px;
+        }
+
+        .matching-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .column {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .column-header {
+            text-align: center;
+            font-weight: bold;
+            color: var(--primary-color);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .card {
+            background: #fff;
+            border: 2px solid #dfe6e9;
+            padding: 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease;
+            min-height: 55px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+            user-select: none;
+            line-height: 1.3;
+        }
+
+        /* Hover Effekt nur wenn nicht gelöst */
+        .card:not(.solved):hover {
+            border-color: var(--accent-color);
+            background: #f1f9ff;
+        }
+
+        .card.selected {
+            border-color: var(--selected-color);
+            background-color: #e1f5fe;
+            transform: scale(1.03);
+            z-index: 2;
+        }
+
+        .card.wrong {
+            background-color: #ffebee;
+            border-color: var(--error-color);
+            animation: shake 0.4s;
+        }
+
+        /* Wenn ein Paar korrekt gefunden wurde (im Spiel) */
+        .card.solved {
+            cursor: default;
+            opacity: 0.8;
+            border-style: solid;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        #solution-btn { background: var(--solution-btn-color); color: white; }
+        #reset-btn { background: #95a5a6; color: white; }
+
+        #feedback {
+            text-align: center;
+            margin-top: 15px;
+            font-weight: bold;
+            min-height: 1.2em;
+        }
+
+        @media (max-width: 500px) {
+            .matching-grid { gap: 10px; }
+            .card { font-size: 0.85rem; padding: 8px; min-height: 65px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Frage-Antwort-Matching</h1>
+    <p class="instruction">
+        Klicke eine <strong>Frage</strong> und dann die passende <strong>Antwort</strong> an.
+    </p>
+
+    <div class="matching-grid">
+        <div class="column">
+            <div class="column-header">Работник</div>
+            <div id="questions-col"></div>
+        </div>
+        <div class="column">
+            <div class="column-header">Пассажир</div>
+            <div id="answers-col"></div>
+        </div>
+    </div>
+
+    <div id="feedback"></div>
+
+    <div class="controls">
+        <button id="solution-btn">Lösung anzeigen</button>
+        <button id="reset-btn">Neu starten</button>
+    </div>
+</div>
+
+<script>
+    // Die Paare und ihre Lösungsfarben
+    const pairs = [
+        { q: "Куда летите?", a: "В Пекин.", color: "#D1F2EB" }, // Türkis
+        { q: "Регистрировались онлайн?", a: "Нет.", color: "#D6EAF8" }, // Blau
+        { q: "Паспорт, пожалуйста.", a: "Пожалуйста.", color: "#E8DAEF" }, // lila
+        { q: "Багаж есть?", a: "Да, и ручная кладь.", color: "#FADBD8" }, // Rosa
+        { q: "Ставьте сначала багаж.", a: "Хорошо.", color: "#FCF3CF" }, // Gelb
+        { q: "Удачного полета!", a: "Спасибо.", color: "#E5E8E8" }  // Grau
+    ];
+
+    let selectedQuestionCard = null;
+    let solvedPairs = 0;
+
+    function shuffle(array) {
+        return array.sort(() => Math.random() - 0.5);
+    }
+
+    function initGame() {
+        const qCol = document.getElementById('questions-col');
+        const aCol = document.getElementById('answers-col');
+        qCol.innerHTML = '';
+        aCol.innerHTML = '';
+        document.getElementById('feedback').textContent = '';
+        selectedQuestionCard = null;
+        solvedPairs = 0;
+
+        const shuffledQs = shuffle([...pairs]);
+        const shuffledAs = shuffle([...pairs]);
+
+        shuffledQs.forEach(pair => {
+            const div = document.createElement('div');
+            div.className = 'card';
+            div.textContent = pair.q;
+            div.onclick = () => {
+                if(div.classList.contains('solved')) return;
+                document.querySelectorAll('#questions-col .card').forEach(c => c.classList.remove('selected'));
+                div.classList.add('selected');
+                selectedQuestionCard = div;
+            };
+            qCol.appendChild(div);
+        });
+
+        shuffledAs.forEach(pair => {
+            const div = document.createElement('div');
+            div.className = 'card';
+            div.textContent = pair.a;
+            div.onclick = () => {
+                if(!selectedQuestionCard || div.classList.contains('solved')) return;
+                checkMatch(selectedQuestionCard, div);
+            };
+            aCol.appendChild(div);
+        });
+    }
+
+    function checkMatch(qCard, aCard) {
+        const pair = pairs.find(p => p.q === qCard.textContent);
+        
+        if (pair.a === aCard.textContent) {
+            // Richtig kombiniert
+            qCard.classList.remove('selected');
+            qCard.classList.add('solved');
+            aCard.classList.add('solved');
+            
+            // Markiere das gefundene Paar in seiner spezifischen Farbe
+            qCard.style.backgroundColor = pair.color;
+            qCard.style.borderColor = pair.color;
+            aCard.style.backgroundColor = pair.color;
+            aCard.style.borderColor = pair.color;
+
+            selectedQuestionCard = null;
+            solvedPairs++;
+
+            if (solvedPairs === pairs.length) {
+                const fb = document.getElementById('feedback');
+                fb.textContent = "Hervorragend gelöst!";
+                fb.style.color = "var(--success-color)";
+            }
+        } else {
+            // Falsch kombiniert
+            qCard.classList.add('wrong');
+            aCard.classList.add('wrong');
+            setTimeout(() => {
+                qCard.classList.remove('wrong', 'selected');
+                aCard.classList.remove('wrong');
+            }, 500);
+            selectedQuestionCard = null;
+        }
+    }
+
+    document.getElementById('solution-btn').onclick = () => {
+        // Alle Karten finden
+        const qCards = document.querySelectorAll('#questions-col .card');
+        const aCards = document.querySelectorAll('#answers-col .card');
+
+        pairs.forEach(pair => {
+            const qCard = Array.from(qCards).find(c => c.textContent === pair.q);
+            const aCard = Array.from(aCards).find(c => c.textContent === pair.a);
+            
+            qCard.classList.add('solved');
+            aCard.classList.add('solved');
+            qCard.style.backgroundColor = pair.color;
+            qCard.style.borderColor = pair.color;
+            aCard.style.backgroundColor = pair.color;
+            aCard.style.borderColor = pair.color;
+        });
+
+        const fb = document.getElementById('feedback');
+        fb.textContent = "Hier siehst du die zusammengehörigen Paare:";
+        fb.style.color = "var(--solution-btn-color)";
+    };
+
+    document.getElementById('reset-btn').onclick = initGame;
+
+    initGame();
+</script>
+
+</body>
+</html>
