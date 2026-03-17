@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Übung: Flughafen Dialog-Puzzle</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --bg-color: #f4f7f6;
+            --text-color: #333;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --solution-color: #f39c12;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        p.instruction {
+            text-align: center;
+            font-size: 0.95rem;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .dialog-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .dialog-item {
+            background: #fff;
+            border: 2px solid #ddd;
+            margin-bottom: 8px;
+            padding: 12px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            font-size: 1rem;
+            line-height: 1.4;
+        }
+
+        .dialog-item:hover {
+            border-color: var(--accent-color);
+            background-color: #f0f8ff;
+        }
+
+        .dialog-item.selected {
+            border-color: var(--accent-color);
+            background-color: #e1f5fe;
+            box-shadow: 0 0 10px rgba(52, 152, 219, 0.3);
+            transform: scale(1.01);
+        }
+
+        .dialog-item.correct {
+            border-color: var(--success-color);
+            background-color: #e8f5e9;
+        }
+
+        .dialog-item.wrong {
+            border-color: var(--error-color);
+            background-color: #ffebee;
+        }
+
+        .controls {
+            margin-top: 25px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        /* Der Prüfen-Button geht über die ganze Breite */
+        #check-btn {
+            grid-column: span 2;
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        #solution-btn {
+            background-color: var(--solution-color);
+            color: white;
+        }
+
+        #reset-btn {
+            background-color: #95a5a6;
+            color: white;
+        }
+
+        button {
+            padding: 15px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: opacity 0.2s;
+        }
+
+        button:active {
+            opacity: 0.8;
+        }
+
+        #feedback {
+            text-align: center;
+            margin-top: 15px;
+            font-weight: bold;
+            min-height: 1.2em;
+        }
+
+        @media (max-width: 480px) {
+            body { padding: 10px; }
+            h1 { font-size: 1.2rem; }
+            .dialog-item { font-size: 0.9rem; padding: 10px; }
+            .controls { grid-template-columns: 1fr; }
+            #check-btn { grid-column: span 1; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Interaktives Dialog-Puzzle</h1>
+    <p class="instruction">Bringe den Dialog am Check-in-Schalter in die richtige Reihenfolge. <br><strong>Tausche zwei Sätze durch Anklicken aus.</strong></p>
+    
+    <div id="dialog-container" class="dialog-list">
+        <!-- Dialogzeilen kommen hier rein -->
+    </div>
+
+    <div id="feedback"></div>
+
+    <div class="controls">
+        <button id="check-btn">Prüfen</button>
+        <button id="solution-btn">Lösung anzeigen</button>
+        <button id="reset-btn">Neu mischen</button>
+    </div>
+</div>
+
+<script>
+    const correctOrder = [
+        "Здравствуйте!",
+        "Куда летите?",
+        "Здравствуйте! В Пекин.",
+        "Регистрировались онлайн?",
+        "Нет.",
+        "Паспорт, пожалуйста.",
+        "Пожалуйста.",
+        "Багаж есть?",
+        "Да, и ручная кладь.",
+        "Ставьте сначала багаж, теперь ручную кладь.",
+        "Скажите, а можно мне место у окна?",
+        "Да, ваше место 16А, а выход на посадку 19. Удачного полета!",
+        "Спасибо."
+    ];
+
+    let currentOrder = [...correctOrder];
+    let selectedIndex = null;
+
+    const container = document.getElementById('dialog-container');
+    const feedback = document.getElementById('feedback');
+
+    function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    function render(highlightCorrect = false) {
+        container.innerHTML = '';
+        currentOrder.forEach((text, index) => {
+            const div = document.createElement('div');
+            div.className = 'dialog-item';
+            if (selectedIndex === index) div.classList.add('selected');
+            
+            if (highlightCorrect) {
+                if (text === correctOrder[index]) {
+                    div.classList.add('correct');
+                } else {
+                    div.classList.add('wrong');
+                }
+            }
+            
+            div.textContent = text;
+            div.onclick = () => handleSelect(index);
+            container.appendChild(div);
+        });
+    }
+
+    function handleSelect(index) {
+        feedback.textContent = '';
+        if (selectedIndex === null) {
+            selectedIndex = index;
+            render();
+        } else {
+            const temp = currentOrder[selectedIndex];
+            currentOrder[selectedIndex] = currentOrder[index];
+            currentOrder[index] = temp;
+            selectedIndex = null;
+            render();
+        }
+    }
+
+    document.getElementById('check-btn').onclick = () => {
+        let errors = 0;
+        currentOrder.forEach((text, index) => {
+            if (text !== correctOrder[index]) errors++;
+        });
+
+        render(true);
+
+        if (errors === 0) {
+            feedback.style.color = 'var(--success-color)';
+            feedback.textContent = 'Hervorragend! Alles ist richtig.';
+        } else {
+            feedback.style.color = 'var(--error-color)';
+            feedback.textContent = 'Einige Sätze sind noch an der falschen Stelle.';
+        }
+    };
+
+    document.getElementById('solution-btn').onclick = () => {
+        currentOrder = [...correctOrder];
+        selectedIndex = null;
+        feedback.style.color = 'var(--solution-color)';
+        feedback.textContent = 'Hier ist die richtige Reihenfolge:';
+        render(true);
+    };
+
+    document.getElementById('reset-btn').onclick = () => {
+        shuffle(currentOrder);
+        selectedIndex = null;
+        feedback.textContent = '';
+        render();
+    };
+
+    // Startzustand
+    shuffle(currentOrder);
+    render();
+</script>
+
+</body>
+</html>
