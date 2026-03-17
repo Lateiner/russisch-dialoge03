@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Übung: Die richtige Reaktion</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --bg-color: #f0f2f5;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --text-color: #2c3e50;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            color: var(--text-color);
+            font-style: normal; /* Sicherstellen, dass nichts kursiv ist */
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background: #eee;
+            border-radius: 4px;
+            margin-bottom: 25px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--accent-color);
+            width: 0%;
+            border-radius: 4px;
+            transition: width 0.4s ease;
+        }
+
+        h1 {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            text-align: center;
+            color: var(--primary-color);
+            font-style: normal;
+        }
+
+        .situation-box {
+            background-color: #eef7fd;
+            border-left: 5px solid var(--accent-color);
+            padding: 15px;
+            margin-bottom: 25px;
+            font-size: 1.05rem;
+            font-style: normal; /* Keine Kursivschrift */
+            line-height: 1.5;
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option {
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 1.1rem;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-style: normal;
+        }
+
+        .option:hover {
+            border-color: var(--accent-color);
+            background-color: #f9fbff;
+        }
+
+        .option.correct {
+            border-color: var(--success-color);
+            background-color: #e8f5e9;
+            color: var(--success-color);
+            font-weight: bold;
+        }
+
+        .option.wrong {
+            border-color: var(--error-color);
+            background-color: #ffebee;
+            color: var(--error-color);
+        }
+
+        .option.disabled {
+            pointer-events: none;
+        }
+
+        .next-btn {
+            margin-top: 25 healthiest;
+            width: 100%;
+            padding: 15px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: none;
+            font-style: normal;
+        }
+
+        #result-screen {
+            text-align: center;
+            display: none;
+        }
+
+        .score-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 8px solid var(--success-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 20px auto;
+        }
+
+        p {
+            font-style: normal;
+        }
+
+        @media (max-width: 480px) {
+            .container { padding: 15px; }
+            h1 { font-size: 1.1rem; }
+            .situation-box { font-size: 0.95rem; }
+            .option { font-size: 1rem; padding: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="quiz-screen">
+        <div class="progress-container">
+            <div id="progress-bar" class="progress-bar"></div>
+        </div>
+        <h1 id="question-title">Was sagen Sie als Passagier?</h1>
+        
+        <div class="situation-box" id="situation">
+            Situation wird geladen...
+        </div>
+
+        <div class="options-list" id="options">
+            <!-- Optionen werden hier eingefügt -->
+        </div>
+
+        <button id="next-btn" class="next-btn" onclick="nextQuestion()">Nächste Frage</button>
+    </div>
+
+    <div id="result-screen">
+        <h1>Übung abgeschlossen!</h1>
+        <div class="score-circle" id="score">0/6</div>
+        <p id="result-text">Toll gemacht!</p>
+        <button class="next-btn" style="display:block; margin-top: 20px;" onclick="resetQuiz()">Nochmal versuchen</button>
+    </div>
+</div>
+
+<script>
+    const quizData = [
+        {
+            context: "Der Mitarbeiter am Schalter fragt Sie: Wohin fliegen Sie? (Куда летите?)",
+            options: ["В Пекин.", "Пожалуйста.", "Да, и ручная кладь."],
+            correct: 0
+        },
+        {
+            context: "Der Mitarbeiter möchte Ihren Reisepass sehen: Паспорт, пожалуйста.",
+            options: ["Спасибо.", "Пожалуйста.", "Нет."],
+            correct: 1
+        },
+        {
+            context: "Man fragt Sie, ob Sie Gepäck zum Aufgeben haben: Багаж есть?",
+            options: ["Скажите, а можно мне место у окна?", "Вот бронь отеля.", "Да, и ручная кладь."],
+            correct: 2
+        },
+        {
+            context: "Der Mitarbeiter bittet Sie, Ihren Koffer auf das Band zu stellen.",
+            options: ["Хорошо.", "Где мой билет?", "Здравствуйте!"],
+            correct: 0
+        },
+        {
+            context: "Sie möchten gerne am Fenster sitzen. Wie fragen Sie danach?",
+            options: ["Можно мне место у прохода?", "Можно мне место у окна?", "Где мой выход?"],
+            correct: 1
+        },
+        {
+            context: "Der Mitarbeiter wünscht Ihnen einen guten Flug: Удачного полета!",
+            options: ["Пожалуйста.", "Здравствуйте.", "Спасибо."],
+            correct: 2
+        }
+    ];
+
+    let currentQuestion = 0;
+    let score = 0;
+
+    function loadQuestion() {
+        const q = quizData[currentQuestion];
+        document.getElementById('situation').textContent = q.context;
+        const optionsContainer = document.getElementById('options');
+        optionsContainer.innerHTML = '';
+        
+        q.options.forEach((opt, index) => {
+            const div = document.createElement('div');
+            div.className = 'option';
+            div.textContent = opt;
+            div.onclick = () => checkAnswer(div, index);
+            optionsContainer.appendChild(div);
+        });
+
+        document.getElementById('next-btn').style.display = 'none';
+        updateProgressBar();
+    }
+
+    function checkAnswer(element, index) {
+        const q = quizData[currentQuestion];
+        const allOptions = document.querySelectorAll('.option');
+        
+        allOptions.forEach(opt => opt.classList.add('disabled'));
+
+        if (index === q.correct) {
+            element.classList.add('correct');
+            score++;
+        } else {
+            element.classList.add('wrong');
+            allOptions[q.correct].classList.add('correct');
+        }
+
+        document.getElementById('next-btn').style.display = 'block';
+    }
+
+    function nextQuestion() {
+        currentQuestion++;
+        if (currentQuestion < quizData.length) {
+            loadQuestion();
+        } else {
+            showResults();
+        }
+    }
+
+    function updateProgressBar() {
+        const percent = (currentQuestion / quizData.length) * 100;
+        document.getElementById('progress-bar').style.width = percent + "%";
+    }
+
+    function showResults() {
+        document.getElementById('quiz-screen').style.display = 'none';
+        document.getElementById('result-screen').style.display = 'block';
+        document.getElementById('score').textContent = score + "/" + quizData.length;
+        
+        let msg = "";
+        if(score === quizData.length) msg = "Perfekt! Du bist bereit für den Flughafen.";
+        else if(score >= 4) msg = "Sehr gut! Du hast den Dialog gut verstanden.";
+        else msg = "Schau dir den Dialog nochmal an und versuche es erneut.";
+        
+        document.getElementById('result-text').textContent = msg;
+    }
+
+    function resetQuiz() {
+        currentQuestion = 0;
+        score = 0;
+        document.getElementById('quiz-screen').style.display = 'block';
+        document.getElementById('result-screen').style.display = 'none';
+        loadQuestion();
+    }
+
+    // Start
+    loadQuestion();
+</script>
+
+</body>
+</html>
