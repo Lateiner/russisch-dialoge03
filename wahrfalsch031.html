@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Übung: 10er Informations-Check</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --bg-color: #f4f7f6;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --text-color: #333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            font-style: normal; /* Keine Kursivschrift */
+        }
+
+        .container {
+            width: 100%;
+            max-width: 700px;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-size: 1.3rem;
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+            font-style: normal;
+        }
+
+        .instruction {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 20px;
+            font-style: normal;
+        }
+
+        /* Dialog-Referenz */
+        .reference-toggle {
+            display: block;
+            margin: 0 auto 20px auto;
+            background: #fff;
+            border: 2px solid var(--accent-color);
+            color: var(--accent-color);
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .reference-toggle:hover {
+            background: var(--accent-color);
+            color: #fff;
+        }
+
+        #dialog-ref {
+            display: none;
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            margin-bottom: 25px;
+            border-left: 5px solid var(--accent-color);
+            line-height: 1.6;
+            font-style: normal;
+        }
+
+        /* Fragen-Liste */
+        .question-item {
+            border-bottom: 1px solid #eee;
+            padding: 20px 0;
+        }
+
+        .question-text {
+            font-size: 1rem;
+            margin-bottom: 15px;
+            display: block;
+            line-height: 1.4;
+            font-style: normal;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-check {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-style: normal;
+        }
+
+        .btn-check span {
+            font-size: 0.75rem;
+            font-weight: normal;
+            margin-top: 4px;
+            display: block;
+        }
+
+        /* Feedback Zustände */
+        .btn-check.correct {
+            background-color: var(--success-color) !important;
+            border-color: var(--success-color) !important;
+            color: white !important;
+        }
+
+        .btn-check.wrong {
+            background-color: var(--error-color) !important;
+            border-color: var(--error-color) !important;
+            color: white !important;
+        }
+
+        .btn-check.disabled {
+            pointer-events: none;
+            opacity: 0.5;
+        }
+
+        .btn-check.correct.disabled, .btn-check.wrong.disabled {
+            opacity: 1;
+        }
+
+        /* Footer */
+        .controls {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        #score-display {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+        }
+
+        #reset-btn {
+            padding: 12px 30px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        @media (max-width: 480px) {
+            .container { padding: 15px; }
+            .question-text { font-size: 0.95rem; }
+            .button-group { gap: 8px; }
+            .btn-check { font-size: 0.85rem; padding: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Informations-Check (Wahr/Falsch)</h1>
+    <p class="instruction">Beziehen sich die Aussagen korrekt auf Dialog 1?</p>
+
+    <button class="reference-toggle" onclick="toggleDialog()">Dialog zum Nachlesen anzeigen</button>
+    <div id="dialog-ref">
+        — Здравствуйте!<br>
+        — Куда летите?<br>
+        — Здравствуйте! В Пекин.<br>
+        — Регистрировались онлайн?<br>
+        — Нет.<br>
+        — Паспорт, пожалуйста.<br>
+        — Пожалуйста.<br>
+        — Багаж есть?<br>
+        — Да, и ручная кладь.<br>
+        — Ставьте сначала багаж, теперь ручную кладь.<br>
+        — Скажите, а можно мне место у окна?<br>
+        — Да, ваше место 16А, а выход на посадку 19. Удачного полета!<br>
+        — Спасибо.
+    </div>
+
+    <div id="quiz-container"></div>
+
+    <div class="controls">
+        <div id="score-display">Punkte: 0 / 10</div>
+        <button id="reset-btn" onclick="initQuiz()">Neu starten</button>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        { text: "Der Passagier fliegt nach Peking.", isTrue: true },
+        { text: "Der Passagier hat bereits zu Hause online eingecheckt.", isTrue: false },
+        { text: "Der Mitarbeiter fragt nach dem Reisepass des Passagiers.", isTrue: true },
+        { text: "Der Passagier reist nur mit einer kleinen Tasche ohne Koffer.", isTrue: false },
+        { text: "Der Passagier hat sowohl schweres Gepäck als auch Handgepäck dabei.", isTrue: true },
+        { text: "Der Mitarbeiter möchte, dass zuerst das Handgepäck gewogen wird.", isTrue: false },
+        { text: "Der Passagier möchte am Gang sitzen (место у прохода).", isTrue: false },
+        { text: "Die Sitzplatznummer des Passagiers lautet 16А.", isTrue: true },
+        { text: "Das Flugzeug startet am Ausgang (Выход) Nummer 19.", isTrue: true },
+        { text: "Der Mitarbeiter wünscht dem Passagier am Ende einen guten Flug.", isTrue: true }
+    ];
+
+    let score = 0;
+    let answeredCount = 0;
+
+    function toggleDialog() {
+        const ref = document.getElementById('dialog-ref');
+        const btn = document.querySelector('.reference-toggle');
+        if (ref.style.display === 'block') {
+            ref.style.display = 'none';
+            btn.textContent = 'Dialog zum Nachlesen anzeigen';
+        } else {
+            ref.style.display = 'block';
+            btn.textContent = 'Dialog ausblenden';
+        }
+    }
+
+    function initQuiz() {
+        score = 0;
+        answeredCount = 0;
+        updateScore();
+        const container = document.getElementById('quiz-container');
+        container.innerHTML = '';
+
+        questions.forEach((q, index) => {
+            const item = document.createElement('div');
+            item.className = 'question-item';
+            
+            item.innerHTML = `
+                <span class="question-text">${q.text}</span>
+                <div class="button-group">
+                    <button class="btn-check" onclick="handleChoice(${index}, true, this)">
+                        Wahr
+                        <span>Верно</span>
+                    </button>
+                    <button class="btn-check" onclick="handleChoice(${index}, false, this)">
+                        Falsch
+                        <span>Неверно</span>
+                    </button>
+                </div>
+            `;
+            container.appendChild(item);
+        });
+    }
+
+    function handleChoice(qIndex, choice, btn) {
+        const question = questions[qIndex];
+        const parent = btn.parentElement;
+        const buttons = parent.querySelectorAll('.btn-check');
+        
+        answeredCount++;
+        buttons.forEach(b => b.classList.add('disabled'));
+
+        if (choice === question.isTrue) {
+            btn.classList.add('correct');
+            score++;
+        } else {
+            btn.classList.add('wrong');
+            // Richtige Lösung markieren
+            buttons.forEach(b => {
+                if ((question.isTrue && b.textContent.includes('Wahr')) || 
+                    (!question.isTrue && b.textContent.includes('Falsch'))) {
+                    b.classList.add('correct');
+                }
+            });
+        }
+        updateScore();
+    }
+
+    function updateScore() {
+        document.getElementById('score-display').textContent = `Punkte: ${score} / ${questions.length}`;
+    }
+
+    // Initialisierung beim Laden
+    initQuiz();
+</script>
+
+</body>
+</html>
