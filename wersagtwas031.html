@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Übung: Wer sagt was?</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --worker-color: #3498db;
+            --passenger-color: #9b59b6;
+            --bg-color: #f8f9fa;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 1.2rem;
+            color: var(--primary-color);
+            margin: 10px 0;
+            text-align: center;
+        }
+
+        .instruction {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        /* Spielfeld */
+        .game-area {
+            flex-grow: 1;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Die aktuelle Karte */
+        .card-display {
+            width: 90%;
+            min-height: 120px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border: 2px solid #eee;
+            z-index: 10;
+            transition: transform 0.3s, background-color 0.3s;
+        }
+
+        .card-display.shake {
+            animation: shake 0.4s;
+            border-color: var(--error-color);
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        /* Buttons/Zonen */
+        .zones {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .zone-btn {
+            padding: 20px;
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .zone-btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn-worker { background-color: var(--worker-color); }
+        .btn-passenger { background-color: var(--passenger-color); }
+
+        /* Fortschritt */
+        .progress-container {
+            width: 100%;
+            background: #e0e0e0;
+            height: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--success-color);
+            width: 0%;
+            border-radius: 5px;
+            transition: width 0.3s;
+        }
+
+        /* Ergebnis-Overlay */
+        #result-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-color);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            text-align: center;
+        }
+
+        .stats-list {
+            text-align: left;
+            margin: 20px 0;
+            max-height: 50vh;
+            overflow-y: auto;
+            width: 90%;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .stat-item {
+            font-size: 0.85rem;
+            margin-bottom: 5px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .stat-role { font-weight: bold; }
+        .role-w { color: var(--worker-color); }
+        .role-p { color: var(--passenger-color); }
+
+        button.reset-btn {
+            padding: 12px 25px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        @media (max-width: 400px) {
+            h1 { font-size: 1rem; }
+            .card-display { font-size: 1rem; min-height: 100px; }
+            .zone-btn { padding: 15px; font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Кто это говорит? (Wer sagt das?)</h1>
+    <p class="instruction">Klicke auf die richtige Person für den gezeigten Satz.</p>
+    
+    <div class="progress-container">
+        <div id="progress-bar" class="progress-bar"></div>
+    </div>
+
+    <div class="game-area">
+        <div id="card" class="card-display">Satz lädt...</div>
+
+        <div class="zones">
+            <button class="zone-btn btn-worker" onclick="checkRole('W')">РАБОТНИК<br>(Mitarbeiter)</button>
+            <button class="zone-btn btn-passenger" onclick="checkRole('P')">ПАССАЖИР<br>(Passagier)</button>
+        </div>
+
+        <div id="result-overlay">
+            <h2>Hervorragend!</h2>
+            <p>Du hast alle Sätze zugeordnet.</p>
+            <div class="stats-list" id="stats-list"></div>
+            <button class="reset-btn" onclick="resetGame()">Nochmal spielen</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const dialogue = [
+        { text: "Куда летите?", role: "W" },
+        { text: "В Пекин.", role: "P" },
+        { text: "Регистрировались онлайн?", role: "W" },
+        { text: "Нет.", role: "P" },
+        { text: "Паспорт, пожалуйста.", role: "W" },
+        { text: "Пожалуйста.", role: "P" },
+        { text: "Багаж есть?", role: "W" },
+        { text: "Да, и ручная кладь.", role: "P" },
+        { text: "Ставьте сначала багаж.", role: "W" },
+        { text: "Скажите, а можно мне место у окна?", role: "P" },
+        { text: "Ваше место 16А.", role: "W" },
+        { text: "Удачного полета!", role: "W" },
+        { text: "Спасибо.", role: "P" }
+    ];
+
+    let currentItems = [];
+    let currentIndex = 0;
+
+    function shuffle(array) {
+        return array.sort(() => Math.random() - 0.5);
+    }
+
+    function initGame() {
+        currentItems = shuffle([...dialogue]);
+        currentIndex = 0;
+        document.getElementById('result-overlay').style.display = 'none';
+        updateCard();
+        updateProgress();
+    }
+
+    function updateCard() {
+        const card = document.getElementById('card');
+        card.textContent = currentItems[currentIndex].text;
+        card.style.backgroundColor = "white";
+    }
+
+    function updateProgress() {
+        const percent = (currentIndex / currentItems.length) * 100;
+        document.getElementById('progress-bar').style.width = percent + "%";
+    }
+
+    function checkRole(chosenRole) {
+        const card = document.getElementById('card');
+        const correctRole = currentItems[currentIndex].role;
+
+        if (chosenRole === correctRole) {
+            // Richtig
+            card.style.backgroundColor = "#e8f5e9";
+            currentIndex++;
+            
+            if (currentIndex < currentItems.length) {
+                setTimeout(() => {
+                    updateCard();
+                    updateProgress();
+                }, 300);
+            } else {
+                updateProgress();
+                setTimeout(showResults, 300);
+            }
+        } else {
+            // Falsch
+            card.classList.add('shake');
+            card.style.backgroundColor = "#ffebee";
+            setTimeout(() => {
+                card.classList.remove('shake');
+                card.style.backgroundColor = "white";
+            }, 400);
+        }
+    }
+
+    function showResults() {
+        const overlay = document.getElementById('result-overlay');
+        const statsList = document.getElementById('stats-list');
+        overlay.style.display = 'flex';
+        
+        statsList.innerHTML = dialogue.map(item => `
+            <div class="stat-item">
+                <span class="stat-role ${item.role === 'W' ? 'role-w' : 'role-p'}">
+                    ${item.role === 'W' ? 'Работник' : 'Пассажир'}:
+                </span> 
+                ${item.text}
+            </div>
+        `).join('');
+    }
+
+    function resetGame() {
+        initGame();
+    }
+
+    // Start
+    initGame();
+</script>
+
+</body>
+</html>
