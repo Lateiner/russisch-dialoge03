@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Übung: Sätze bauen (8 Sätze)</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --bg-color: #f8f9fa;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --word-bg: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            font-style: normal;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-size: 1.3rem;
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 5px;
+            font-style: normal;
+        }
+
+        .instruction {
+            text-align: center;
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+
+        .target-sentence {
+            background-color: #eef7fd;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            border-left: 5px solid var(--accent-color);
+        }
+
+        .answer-area {
+            min-height: 70px;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            padding: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+            background-color: #fff;
+            justify-content: center;
+            align-content: center;
+        }
+
+        .word-pool {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            padding: 15px;
+            background: #fdfdfd;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            min-height: 50px;
+        }
+
+        .word-tile {
+            background: var(--word-bg);
+            border: 2px solid var(--accent-color);
+            color: var(--accent-color);
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+            user-select: none;
+            font-size: 1rem;
+        }
+
+        .word-tile:hover {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .controls {
+            margin-top: 25px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        #check-btn {
+            grid-column: span 2;
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        #solution-btn { background-color: #f39c12; color: white; }
+        #next-btn { background-color: var(--success-color); color: white; display: none; }
+        #reset-btn { background-color: #95a5a6; color: white; }
+
+        button {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        #feedback {
+            text-align: center;
+            margin-top: 15px;
+            font-weight: bold;
+            min-height: 1.2em;
+        }
+
+        .progress {
+            text-align: center;
+            font-size: 0.8rem;
+            color: #999;
+            margin-top: 15px;
+        }
+
+        @media (max-width: 480px) {
+            .word-tile { font-size: 0.9rem; padding: 6px 12px; }
+            .target-sentence { font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Sätze bauen: Grenzkontrolle</h1>
+    <p class="instruction">Bilde den russischen Satz durch Anklicken der Wörter.</p>
+
+    <div class="target-sentence" id="german-text">Lade Übung...</div>
+    
+    <div class="answer-area" id="answer-area"></div>
+
+    <div class="word-pool" id="word-pool"></div>
+
+    <div id="feedback"></div>
+
+    <div class="controls">
+        <button id="check-btn">Prüfen</button>
+        <button id="solution-btn">Lösung</button>
+        <button id="reset-btn">Löschen</button>
+        <button id="next-btn">Nächster Satz</button>
+    </div>
+
+    <div class="progress" id="progress"></div>
+</div>
+
+<script>
+    const exercises = [
+        {
+            german: "Guten Tag!",
+            russian: ["Здравствуйте!"],
+            correctStr: "Здравствуйте!"
+        },
+        {
+            german: "Wohin fliegen Sie?",
+            russian: ["Куда", "вы", "летите?"],
+            correctStr: "Куда вы летите?"
+        },
+        {
+            german: "Reisezweck — Tourismus.",
+            russian: ["Цель", "поездки", "—", "туризм"],
+            correctStr: "Цель поездки — туризм"
+        },
+        {
+            german: "Wo werden Sie wohnen?",
+            russian: ["Где", "вы", "будете", "жить?"],
+            correctStr: "Где вы будете жить?"
+        },
+        {
+            german: "Ich werde im Hotel wohnen.",
+            russian: ["Я", "буду", "жить", "в", "отеле"],
+            correctStr: "Я буду жить в отеле"
+        },
+        {
+            german: "Hier ist meine Hotelbuchung.",
+            russian: ["Вот", "моя", "бронь", "отеля"],
+            correctStr: "Вот моя бронь отеля"
+        },
+        {
+            german: "Wann fliegen Sie zurück?",
+            russian: ["Когда", "вы", "летите", "обратно?"],
+            correctStr: "Когда вы летите обратно?"
+        },
+        {
+            german: "Am einundzwanzigsten Juli.",
+            russian: ["Двадцать", "первого", "июля"],
+            correctStr: "Двадцать первого июля"
+        }
+    ];
+
+    let currentStep = 0;
+    let selectedWords = [];
+    let poolWords = [];
+
+    function shuffle(array) {
+        return array.sort(() => Math.random() - 0.5);
+    }
+
+    function initExercise() {
+        if (currentStep >= exercises.length) {
+            showFinal();
+            return;
+        }
+        const ex = exercises[currentStep];
+        selectedWords = [];
+        poolWords = shuffle([...ex.russian]);
+        
+        document.getElementById('german-text').textContent = ex.german;
+        document.getElementById('feedback').textContent = '';
+        document.getElementById('next-btn').style.display = 'none';
+        document.getElementById('check-btn').style.display = 'block';
+        document.getElementById('progress').textContent = `Satz ${currentStep + 1} von ${exercises.length}`;
+        
+        render();
+    }
+
+    function render() {
+        const poolContainer = document.getElementById('word-pool');
+        const answerContainer = document.getElementById('answer-area');
+        
+        poolContainer.innerHTML = '';
+        answerContainer.innerHTML = '';
+
+        poolWords.forEach((word, index) => {
+            const tile = document.createElement('div');
+            tile.className = 'word-tile';
+            tile.textContent = word;
+            tile.onclick = () => selectWord(index);
+            poolContainer.appendChild(tile);
+        });
+
+        selectedWords.forEach((word, index) => {
+            const tile = document.createElement('div');
+            tile.className = 'word-tile';
+            tile.textContent = word;
+            tile.onclick = () => deselectWord(index);
+            answerContainer.appendChild(tile);
+        });
+    }
+
+    function selectWord(index) {
+        selectedWords.push(poolWords[index]);
+        poolWords.splice(index, 1);
+        render();
+    }
+
+    function deselectWord(index) {
+        poolWords.push(selectedWords[index]);
+        selectedWords.splice(index, 1);
+        render();
+    }
+
+    document.getElementById('check-btn').onclick = () => {
+        const userStr = selectedWords.join(' ');
+        const correctStr = exercises[currentStep].correctStr;
+        const fb = document.getElementById('feedback');
+
+        if (userStr === correctStr) {
+            fb.textContent = "Richtig!";
+            fb.style.color = "var(--success-color)";
+            document.getElementById('check-btn').style.display = 'none';
+            document.getElementById('next-btn').style.display = 'block';
+        } else {
+            fb.textContent = "Versuche es noch einmal.";
+            fb.style.color = "var(--error-color)";
+        }
+    };
+
+    document.getElementById('solution-btn').onclick = () => {
+        selectedWords = [...exercises[currentStep].russian];
+        poolWords = [];
+        render();
+        document.getElementById('check-btn').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'block';
+    };
+
+    document.getElementById('reset-btn').onclick = () => {
+        initExercise();
+    };
+
+    document.getElementById('next-btn').onclick = () => {
+        currentStep++;
+        initExercise();
+    };
+
+    function showFinal() {
+        document.getElementById('german-text').textContent = "Hervorragend!";
+        document.getElementById('answer-area').innerHTML = "Du hast alle 8 Sätze gemeistert.";
+        document.getElementById('word-pool').style.display = 'none';
+        document.getElementById('check-btn').style.display = 'none';
+        document.getElementById('solution-btn').style.display = 'none';
+        document.getElementById('reset-btn').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+        document.getElementById('feedback').textContent = "Du bist nun bereit für die Grenzkontrolle!";
+    }
+
+    initExercise();
+</script>
+
+</body>
+</html>
