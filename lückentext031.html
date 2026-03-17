@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Übung: Sofort-Feedback Lückentext</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --bg-color: #f4f7f6;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --text-color: #333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 650px;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-size: 1.3rem;
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+        .instruction {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .dialog-box {
+            line-height: 2.3;
+            font-size: 1.05rem;
+            background: #fff;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #eee;
+        }
+
+        .line {
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .select-wrapper {
+            display: inline-block;
+            position: relative;
+            margin: 0 4px;
+        }
+
+        select {
+            padding: 4px 25px 4px 10px;
+            font-size: 1rem;
+            border: 2px solid #ccc;
+            border-radius: 6px;
+            background-color: #fff;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.3s;
+            font-family: inherit;
+            appearance: none; /* Entfernt System-Pfeile */
+            -webkit-appearance: none;
+        }
+
+        /* Kleiner Custom-Pfeil */
+        .select-wrapper::after {
+            content: "▼";
+            font-size: 0.7rem;
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            color: #999;
+        }
+
+        /* Korrektes Feedback */
+        select.correct {
+            border-color: var(--success-color);
+            background-color: #e8f5e9;
+            color: var(--success-color);
+            padding-right: 30px;
+        }
+
+        select.correct + .feedback-icon::after {
+            content: "✔";
+            color: var(--success-color);
+            margin-left: 5px;
+            font-weight: bold;
+        }
+
+        /* Falsches Feedback */
+        select.wrong {
+            border-color: var(--error-color);
+            background-color: #ffebee;
+            color: var(--error-color);
+        }
+
+        select.wrong + .feedback-icon::after {
+            content: "✘";
+            color: var(--error-color);
+            margin-left: 5px;
+            font-weight: bold;
+        }
+
+        .controls {
+            margin-top: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        button {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        #solution-btn { background-color: #f39c12; color: white; }
+        #reset-btn { background-color: #95a5a6; color: white; }
+
+        #progress-bar {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        @media (max-width: 500px) {
+            .dialog-box { font-size: 0.95rem; line-height: 2.8; }
+            select { font-size: 0.9rem; }
+            .controls { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Dialog am Check-in</h1>
+    <p class="instruction">Wähle das richtige Wort. Du erhältst sofort eine Rückmeldung.</p>
+
+    <div class="dialog-box">
+        <span class="line">„Здравствуйте!“</span>
+        <span class="line">„Куда 
+            <span class="select-wrapper">
+                <select data-correct="летите">
+                    <option value="">...</option>
+                    <option value="идете">идете</option>
+                    <option value="летите">летите</option>
+                    <option value="едите">едите</option>
+                </select><span class="feedback-icon"></span>
+            </span>?“
+        </span>
+        <span class="line">„Здравствуйте! В Пекин.“</span>
+        <span class="line">„Регистрировались 
+            <span class="select-wrapper">
+                <select data-correct="онлайн">
+                    <option value="">...</option>
+                    <option value="вчера">вчера</option>
+                    <option value="онлайн">онлайн</option>
+                    <option value="дома">дома</option>
+                </select><span class="feedback-icon"></span>
+            </span>?“
+        </span>
+        <span class="line">„Нет.“</span>
+        <span class="line">„
+            <span class="select-wrapper">
+                <select data-correct="Паспорт">
+                    <option value="">...</option>
+                    <option value="Билет">Билет</option>
+                    <option value="Выход">Выход</option>
+                    <option value="Паспорт">Паспорт</option>
+                </select><span class="feedback-icon"></span>
+            </span>, пожалуйста.“
+        </span>
+        <span class="line">„Пожалуйста.“</span>
+        <span class="line">„
+            <span class="select-wrapper">
+                <select data-correct="Багаж">
+                    <option value="">...</option>
+                    <option value="Багаж">Багаж</option>
+                    <option value="Место">Место</option>
+                    <option value="Виза">Виза</option>
+                </select><span class="feedback-icon"></span>
+            </span> есть?“
+        </span>
+        <span class="line">„Да, и 
+            <span class="select-wrapper">
+                <select data-correct="ручная">
+                    <option value="">...</option>
+                    <option value="маленькая">маленькая</option>
+                    <option value="ручная">ручная</option>
+                    <option value="легкая">легкая</option>
+                </select><span class="feedback-icon"></span>
+            </span> кладь.“
+        </span>
+        <span class="line">„
+            <span class="select-wrapper">
+                <select data-correct="Ставьте">
+                    <option value="">...</option>
+                    <option value="Берите">Берите</option>
+                    <option value="Ставьте">Ставьте</option>
+                    <option value="Дайте">Дайте</option>
+                </select><span class="feedback-icon"></span>
+            </span> сначала багаж, теперь ручную кладь.“
+        </span>
+        <span class="line">„Скажите, а можно мне место у 
+            <span class="select-wrapper">
+                <select data-correct="окна">
+                    <option value="">...</option>
+                    <option value="прохода">прохода</option>
+                    <option value="окна">окна</option>
+                    <option value="выхода">выхода</option>
+                </select><span class="feedback-icon"></span>
+            </span>?“
+        </span>
+        <span class="line">„Да, ваше место 16А, а 
+            <span class="select-wrapper">
+                <select data-correct="выход">
+                    <option value="">...</option>
+                    <option value="вход">вход</option>
+                    <option value="выход">выход</option>
+                    <option value="полет">полет</option>
+                </select><span class="feedback-icon"></span>
+            </span> на посадку 19.“
+        </span>
+        <span class="line">„Удачного 
+            <span class="select-wrapper">
+                <select data-correct="полета">
+                    <option value="">...</option>
+                    <option value="дня">дня</option>
+                    <option value="полета">полета</option>
+                    <option value="пути">пути</option>
+                </select><span class="feedback-icon"></span>
+            </span>!“
+        </span>
+        <span class="line">„Спасибо.“</span>
+    </div>
+
+    <div id="progress-bar">Gelöst: 0 / 9</div>
+
+    <div class="controls">
+        <button id="solution-btn">Lösung anzeigen</button>
+        <button id="reset-btn">Zurücksetzen</button>
+    </div>
+</div>
+
+<script>
+    const selects = document.querySelectorAll('select');
+    const progressBar = document.getElementById('progress-bar');
+
+    function updateProgress() {
+        let correctCount = 0;
+        selects.forEach(s => {
+            if(s.classList.contains('correct')) correctCount++;
+        });
+        progressBar.textContent = `Gelöst: ${correctCount} / ${selects.length}`;
+        
+        if(correctCount === selects.length) {
+            progressBar.style.color = "var(--success-color)";
+            progressBar.textContent = "Alle richtig! Gut gemacht!";
+        } else {
+            progressBar.style.color = "var(--primary-color)";
+        }
+    }
+
+    // Sofort-Feedback beim Ändern
+    selects.forEach(select => {
+        select.addEventListener('change', function() {
+            const correctValue = this.getAttribute('data-correct');
+            this.classList.remove('correct', 'wrong');
+            
+            if (this.value === "") {
+                // Nichts ausgewählt
+            } else if (this.value === correctValue) {
+                this.classList.add('correct');
+            } else {
+                this.classList.add('wrong');
+            }
+            updateProgress();
+        });
+    });
+
+    // Button: Lösung anzeigen
+    document.getElementById('solution-btn').onclick = () => {
+        selects.forEach(select => {
+            select.value = select.getAttribute('data-correct');
+            select.classList.remove('wrong');
+            select.classList.add('correct');
+        });
+        updateProgress();
+    };
+
+    // Button: Zurücksetzen
+    document.getElementById('reset-btn').onclick = () => {
+        selects.forEach(select => {
+            select.value = "";
+            select.classList.remove('correct', 'wrong');
+        });
+        updateProgress();
+    };
+</script>
+
+</body>
+</html>
