@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Übung: Dialog 3 Satz-Bau</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --bg-color: #f4f7f6;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --tile-bg: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            font-style: normal !important;
+        }
+
+        /* Verbot von Kursivschrift */
+        * {
+            font-style: normal !important;
+            box-sizing: border-box;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-size: 1.3rem;
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+        .instruction {
+            text-align: center;
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+
+        .target-box {
+            background-color: #eef7fd;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            border-left: 5px solid var(--accent-color);
+            min-height: 50px;
+        }
+
+        /* Bereich für die gewählten Wörter */
+        .answer-area {
+            min-height: 80px;
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            padding: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+            background-color: #fafafa;
+            justify-content: center;
+            align-content: center;
+        }
+
+        /* Bereich für den Wort-Pool */
+        .word-pool {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            padding: 15px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+        }
+
+        .word-tile {
+            background: var(--tile-bg);
+            border: 2px solid var(--accent-color);
+            color: var(--accent-color);
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+            user-select: none;
+            font-size: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .word-tile:hover {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .controls {
+            margin-top: 25px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        #check-btn {
+            grid-column: span 2;
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        #reset-btn { background-color: #95a5a6; color: white; }
+        #solution-btn { background-color: #f39c12; color: white; }
+
+        button {
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        #feedback {
+            text-align: center;
+            margin-top: 15px;
+            font-weight: bold;
+            min-height: 1.2em;
+        }
+
+        @media (max-width: 480px) {
+            .word-tile { font-size: 0.9rem; padding: 8px 12px; }
+            .container { padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Satz-Baukasten: Am Gate</h1>
+    <p class="instruction">Bauen Sie den Satz des Mitarbeiters in der richtigen Reihenfolge:</p>
+
+    <div class="target-box">
+        „Ihre Bordkarte und Ihren Pass, bitte.“
+    </div>
+    
+    <div class="answer-area" id="answer-area">
+        <!-- Gewählte Wörter -->
+    </div>
+
+    <div class="word-pool" id="word-pool">
+        <!-- Wort-Kacheln -->
+    </div>
+
+    <div id="feedback"></div>
+
+    <div class="controls">
+        <button id="check-btn" onclick="checkAnswer()">Prüfen</button>
+        <button id="solution-btn" onclick="showSolution()">Lösung</button>
+        <button id="reset-btn" onclick="resetExercise()">Löschen</button>
+    </div>
+</div>
+
+<script>
+    const correctSentence = ["Ваш", "посадочный", "талон", "и", "паспорт,", "пожалуйста."];
+    let poolWords = ["посадочный", "паспорт,", "Ваш", "пожалуйста.", "и", "талон"];
+    let selectedWords = [];
+
+    function shuffle(array) {
+        return array.sort(() => Math.random() - 0.5);
+    }
+
+    function render() {
+        const poolContainer = document.getElementById('word-pool');
+        const answerContainer = document.getElementById('answer-area');
+        
+        poolContainer.innerHTML = '';
+        answerContainer.innerHTML = '';
+
+        poolWords.forEach((word, index) => {
+            const tile = document.createElement('div');
+            tile.className = 'word-tile';
+            tile.textContent = word;
+            tile.onclick = () => selectWord(index);
+            poolContainer.appendChild(tile);
+        });
+
+        selectedWords.forEach((word, index) => {
+            const tile = document.createElement('div');
+            tile.className = 'word-tile';
+            tile.textContent = word;
+            tile.onclick = () => deselectWord(index);
+            answerContainer.appendChild(tile);
+        });
+    }
+
+    function selectWord(index) {
+        selectedWords.push(poolWords[index]);
+        poolWords.splice(index, 1);
+        document.getElementById('feedback').textContent = '';
+        render();
+    }
+
+    function deselectWord(index) {
+        poolWords.push(selectedWords[index]);
+        selectedWords.splice(index, 1);
+        document.getElementById('feedback').textContent = '';
+        render();
+    }
+
+    function checkAnswer() {
+        const isCorrect = JSON.stringify(selectedWords) === JSON.stringify(correctSentence);
+        const fb = document.getElementById('feedback');
+        if (isCorrect) {
+            fb.textContent = "Richtig! Вы молодец!";
+            fb.style.color = "var(--success-color)";
+        } else {
+            fb.textContent = "Noch nicht ganz richtig.";
+            fb.style.color = "var(--error-color)";
+        }
+    }
+
+    function showSolution() {
+        selectedWords = [...correctSentence];
+        poolWords = [];
+        document.getElementById('feedback').textContent = "Hier ist die richtige Reihenfolge.";
+        document.getElementById('feedback').style.color = "#f39c12";
+        render();
+    }
+
+    function resetExercise() {
+        selectedWords = [];
+        poolWords = shuffle(["посадочный", "паспорт,", "Ваш", "пожалуйста.", "и", "талон"]);
+        document.getElementById('feedback').textContent = '';
+        render();
+    }
+
+    // Initialisierung
+    poolWords = shuffle(poolWords);
+    render();
+</script>
+
+</body>
+</html>
