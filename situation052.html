@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Übung: Speed-Reading Zoll</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --bg-color: #f4f7f6;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --text-color: #333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            font-style: normal !important;
+        }
+
+        * {
+            font-style: normal !important;
+            box-sizing: border-box;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        /* Timer Balken */
+        .timer-container {
+            width: 100%;
+            height: 6px;
+            background: #eee;
+            border-radius: 3px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .timer-bar {
+            height: 100%;
+            background: var(--accent-color);
+            width: 100%;
+            transition: width 0.1s linear;
+        }
+
+        h1 {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            color: var(--primary-color);
+        }
+
+        .situation-box {
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+            background: #eef7fd;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 25px;
+            border: 1px solid #d1e9f9;
+        }
+
+        .options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option-btn {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            background: white;
+            font-size: 1.05rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--primary-color);
+        }
+
+        .option-btn:hover:not(.disabled) {
+            border-color: var(--accent-color);
+            background: #f0f8ff;
+        }
+
+        .option-btn.correct {
+            background-color: var(--success-color) !important;
+            border-color: var(--success-color) !important;
+            color: white !important;
+        }
+
+        .option-btn.wrong {
+            background-color: var(--error-color) !important;
+            border-color: var(--error-color) !important;
+            color: white !important;
+        }
+
+        .option-btn.disabled {
+            pointer-events: none;
+        }
+
+        /* Start / Result Screens */
+        .screen {
+            display: none;
+        }
+
+        .active {
+            display: block;
+        }
+
+        .start-btn, .restart-btn {
+            background: var(--primary-color);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .score-display {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 20px 0;
+            color: var(--accent-color);
+        }
+
+        @media (max-width: 480px) {
+            .situation-box { font-size: 1rem; }
+            .option-btn { font-size: 0.95rem; padding: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Startbildschirm -->
+    <div id="start-screen" class="screen active">
+        <h1>Zoll Speed-Reading</h1>
+        <p>Erkennen Sie die russischen Sätze unter Zeitdruck? Sie haben 10 Sekunden pro Frage.</p>
+        <button class="start-btn" onclick="startGame()">Starten</button>
+    </div>
+
+    <!-- Quizbildschirm -->
+    <div id="quiz-screen" class="screen">
+        <div class="timer-container">
+            <div id="timer-bar" class="timer-bar"></div>
+        </div>
+        <div class="situation-box" id="situation-text">Situation lädt...</div>
+        <div class="options-grid" id="options-container">
+            <!-- Buttons werden hier eingefügt -->
+        </div>
+    </div>
+
+    <!-- Ergebnisbildschirm -->
+    <div id="result-screen" class="screen">
+        <h1>Ergebnis</h1>
+        <div class="score-display" id="final-score">0 / 0</div>
+        <p id="result-comment"></p>
+        <button class="restart-btn" onclick="startGame()">Nochmal versuchen</button>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        {
+            situation: "Der Beamte fragt nach dem Reiseziel.",
+            options: ["Куда летите?", "Цель поездки?", "Где будете жить?"],
+            correct: 0
+        },
+        {
+            situation: "Der Beamte möchte wissen, wann Sie zurückfliegen.",
+            options: ["Когда будете жить?", "Куда летите обратно?", "Когда летите обратно?"],
+            correct: 2
+        },
+        {
+            situation: "Der Beamte fragt nach dem Grund Ihrer Reise.",
+            options: ["Цель поездки?", "Ваша виза?", "Ваш паспорт?"],
+            correct: 0
+        },
+        {
+            situation: "Der Beamte fragt nach Ihrer Hotelbuchung.",
+            options: ["Где ваш паспорт?", "Где ваша бронь отеля?", "Вот бронь отеля."],
+            correct: 1
+        },
+        {
+            situation: "Der Beamte fragt, wo Sie übernachten werden.",
+            options: ["Где вы летите?", "Куда будете жить?", "Где будете жить?"],
+            correct: 2
+        },
+        {
+            situation: "Der Beamte fordert Sie auf, weiterzugehen.",
+            options: ["Здравствуйте!", "Проходите.", "Пожалуйста."],
+            correct: 1
+        },
+        {
+            situation: "Der Beamte fragt nach Ihrem Reisepass.",
+            options: ["Ваш паспорт, пожалуйста.", "Цель поездки?", "Когда летите обратно?"],
+            correct: 0
+        },
+        {
+            situation: "Der Beamte möchte Ihr Visum sehen.",
+            options: ["Вот виза.", "Ваша виза, пожалуйста.", "Где будете жить?"],
+            correct: 1
+        }
+    ];
+
+    let currentIdx = 0;
+    let score = 0;
+    let timerInterval;
+    let timeLeft;
+    const totalTime = 100; // In Zehntelsekunden für flüssigen Balken (10 Sek)
+
+    function startGame() {
+        currentIdx = 0;
+        score = 0;
+        showScreen('quiz-screen');
+        nextQuestion();
+    }
+
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    function nextQuestion() {
+        if (currentIdx >= questions.length) {
+            endGame();
+            return;
+        }
+
+        const q = questions[currentIdx];
+        document.getElementById('situation-text').textContent = q.situation;
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+
+        q.options.forEach((opt, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.textContent = opt;
+            btn.onclick = () => selectOption(i);
+            container.appendChild(btn);
+        });
+
+        startTimer();
+    }
+
+    function startTimer() {
+        clearInterval(timerInterval);
+        timeLeft = totalTime;
+        updateTimerBar();
+        
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            updateTimerBar();
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                selectOption(-1); // Timeout
+            }
+        }, 100);
+    }
+
+    function updateTimerBar() {
+        const bar = document.getElementById('timer-bar');
+        bar.style.width = (timeLeft / totalTime * 100) + '%';
+    }
+
+    function selectOption(idx) {
+        clearInterval(timerInterval);
+        const q = questions[currentIdx];
+        const buttons = document.querySelectorAll('.option-btn');
+        
+        buttons.forEach(btn => btn.classList.add('disabled'));
+
+        if (idx === q.correct) {
+            buttons[idx].classList.add('correct');
+            score++;
+        } else {
+            if (idx !== -1) buttons[idx].classList.add('wrong');
+            buttons[q.correct].classList.add('correct');
+        }
+
+        setTimeout(() => {
+            currentIdx++;
+            nextQuestion();
+        }, 1500);
+    }
+
+    function endGame() {
+        showScreen('result-screen');
+        document.getElementById('final-score').textContent = `${score} / ${questions.length}`;
+        let comment = score > 6 ? "Ausgezeichnet! Sie sind bereit für den Zoll." : "Gut gemacht! Ein wenig mehr Übung hilft gegen den Stress.";
+        document.getElementById('result-comment').textContent = comment;
+    }
+
+    function updateTimerBar() {
+        const bar = document.getElementById('timer-bar');
+        bar.style.width = (timeLeft / totalTime * 100) + '%';
+    }
+</script>
+
+</body>
+</html>
