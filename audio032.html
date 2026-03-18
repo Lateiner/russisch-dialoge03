@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Übung: Hörverstehen Zoll (Männlich)</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --bg-color: #f4f7f6;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --card-bg: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            font-style: normal !important;
+        }
+
+        /* Globales Kursiv-Verbot */
+        * {
+            font-style: normal !important;
+            box-sizing: border-box;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 700px;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 1.3rem;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .instruction {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 25px;
+        }
+
+        /* Audio Bereich */
+        .audio-section {
+            background: #eef7fd;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 2px solid var(--accent-color);
+        }
+
+        .play-btn {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            font-size: 1.8rem;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+            transition: transform 0.2s;
+            display: block;
+            margin: 0 auto 10px auto;
+        }
+
+        .play-btn:active { transform: scale(0.9); }
+
+        #feedback-text {
+            font-weight: bold;
+            margin: 10px 0;
+            min-height: 1.2em;
+            color: var(--primary-color);
+        }
+
+        /* Statement Bereich */
+        .statement-display {
+            min-height: 40px;
+            margin-bottom: 25px;
+        }
+
+        #show-text-btn {
+            background-color: #95a5a6;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        #current-statement-text {
+            display: none;
+            margin-top: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--accent-color);
+            padding: 5px;
+            background: #fdfdfd;
+            border: 1px dashed #ccc;
+        }
+
+        /* Bild-Gitter */
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .image-card {
+            background: var(--card-bg);
+            border: 2px solid #ddd;
+            border-radius: 12px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .image-card:hover:not(.disabled) {
+            border-color: var(--accent-color);
+            background: #f1f9ff;
+        }
+
+        .emoji { font-size: 2.8rem; margin-bottom: 8px; }
+
+        .image-card.correct {
+            background-color: #e8f5e9;
+            border-color: var(--success-color);
+        }
+
+        .image-card.wrong {
+            background-color: #ffebee;
+            border-color: var(--error-color);
+            animation: shake 0.4s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        #reset-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            background: var(--primary-color);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        @media (max-width: 480px) {
+            .image-grid { grid-template-columns: 1fr 1fr; }
+            .container { padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Hörverstehen (Männliche Stimme)</h1>
+    <p class="instruction">Höre die Phrase an und wähle das passende Bild.</p>
+
+    <div class="audio-section">
+        <button class="play-btn" onclick="playCurrentPhrase()">🔊</button>
+        <div id="feedback-text">Drücke auf Play</div>
+    </div>
+
+    <div class="statement-display">
+        <button id="show-text-btn" onclick="toggleStatement()">Text anzeigen</button>
+        <div id="current-statement-text"></div>
+    </div>
+
+    <div id="image-grid" class="image-grid">
+        <!-- JS füllt das Gitter -->
+    </div>
+
+    <button id="reset-btn" onclick="initGame()">Übung neu starten</button>
+</div>
+
+<script>
+    const data = [
+        { id: 1, text: "Ваш паспорт, пожалуйста", icon: "🛂" },
+        { id: 2, text: "Цель поездки", icon: "📸" },
+        { id: 3, text: "Где будете жить", icon: "🏨" },
+        { id: 4, text: "Когда летите обратно", icon: "📅" },
+        { id: 5, text: "Ваша бронь отеля", icon: "📄" },
+        { id: 6, text: "Проходите", icon: "🚶" },
+        { id: 7, text: "Куда летите", icon: "🇨🇳" },
+        { id: 8, text: "Двадцать первого июля", icon: "🔢" }
+    ];
+
+    let currentItem = null;
+    let availableItems = [];
+    const synth = window.speechSynthesis;
+    let maleVoice = null;
+
+    // Suche nach einer männlichen russischen Stimme
+    function loadVoices() {
+        const voices = synth.getVoices();
+        // Bevorzugte Namen für männliche Stimmen in gängigen Systemen
+        const maleNames = ['Maxim', 'Pavel', 'Yuri', 'Pavel', 'Aleksandr'];
+        
+        const russianVoices = voices.filter(v => v.lang.includes('ru'));
+        
+        maleVoice = russianVoices.find(v => 
+            maleNames.some(name => v.name.includes(name))
+        ) || russianVoices[0]; // Fallback auf erste russische Stimme
+    }
+
+    // Sprach-Support Initialisierung
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = loadVoices;
+    }
+
+    function playCurrentPhrase() {
+        if (!currentItem) return;
+        synth.cancel(); // Laufende Sprache stoppen
+        const utter = new SpeechSynthesisUtterance(currentItem.text);
+        if (maleVoice) utter.voice = maleVoice;
+        utter.lang = 'ru-RU';
+        utter.rate = 0.85; 
+        synth.speak(utter);
+    }
+
+    function toggleStatement() {
+        const txt = document.getElementById('current-statement-text');
+        const btn = document.getElementById('show-text-btn');
+        if (txt.style.display === 'block') {
+            txt.style.display = 'none';
+            btn.textContent = 'Text anzeigen';
+        } else {
+            txt.style.display = 'block';
+            btn.textContent = 'Text ausblenden';
+        }
+    }
+
+    function shuffle(array) {
+        return array.sort(() => Math.random() - 0.5);
+    }
+
+    function initGame() {
+        loadVoices();
+        availableItems = shuffle([...data]);
+        const grid = document.getElementById('image-grid');
+        grid.innerHTML = '';
+        
+        data.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'image-card';
+            card.innerHTML = `<div class="emoji">${item.icon}</div>`;
+            card.onclick = () => checkChoice(card, item);
+            grid.appendChild(card);
+        });
+
+        pickNext();
+    }
+
+    function pickNext() {
+        if (availableItems.length === 0) {
+            document.getElementById('feedback-text').textContent = "Hervorragend gelöst!";
+            document.getElementById('feedback-text').style.color = "var(--success-color)";
+            currentItem = null;
+            return;
+        }
+        currentItem = availableItems.pop();
+        document.getElementById('feedback-text').textContent = "Klicke auf den Lautsprecher...";
+        document.getElementById('feedback-text').style.color = "var(--primary-color)";
+        
+        // Text-Anzeige zurücksetzen
+        const txtDisplay = document.getElementById('current-statement-text');
+        txtDisplay.textContent = currentItem.text;
+        txtDisplay.style.display = 'none';
+        document.getElementById('show-text-btn').textContent = 'Text anzeigen';
+    }
+
+    function checkChoice(card, item) {
+        if (!currentItem) return;
+
+        if (item.id === currentItem.id) {
+            card.classList.add('correct');
+            document.getElementById('feedback-text').textContent = "Richtig!";
+            document.getElementById('feedback-text').style.color = "var(--success-color)";
+            
+            setTimeout(() => {
+                card.classList.remove('correct');
+                pickNext();
+            }, 1000);
+        } else {
+            card.classList.add('wrong');
+            document.getElementById('feedback-text').textContent = "Versuch es nochmal!";
+            document.getElementById('feedback-text').style.color = "var(--error-color)";
+            setTimeout(() => card.classList.remove('wrong'), 500);
+        }
+    }
+
+    // Start
+    initGame();
+</script>
+
+</body>
+</html>
