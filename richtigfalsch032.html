@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Übung: Fakten-Check Dialog 2</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --bg-color: #f4f7f6;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --text-color: #333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            font-style: normal !important;
+        }
+
+        * {
+            font-style: normal !important;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 650px;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-size: 1.4rem;
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .instruction {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 25px;
+        }
+
+        .question-card {
+            background: #fff;
+            border: 1px solid #eee;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .question-text {
+            font-size: 1.05rem;
+            display: block;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .toggle-btn {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .toggle-btn span {
+            font-size: 0.75rem;
+            font-weight: normal;
+            margin-top: 4px;
+        }
+
+        /* Zustände */
+        .toggle-btn.correct {
+            background-color: var(--success-color) !important;
+            border-color: var(--success-color) !important;
+            color: white !important;
+        }
+
+        .toggle-btn.wrong {
+            background-color: var(--error-color) !important;
+            border-color: var(--error-color) !important;
+            color: white !important;
+        }
+
+        .toggle-btn.disabled {
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        .toggle-btn.correct.disabled, .toggle-btn.wrong.disabled {
+            opacity: 1;
+        }
+
+        .correction {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: var(--error-color);
+            display: none;
+            font-weight: bold;
+        }
+
+        .controls {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        #score-display {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+        }
+
+        .reset-btn {
+            padding: 12px 30px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        @media (max-width: 480px) {
+            .container { padding: 15px; }
+            h1 { font-size: 1.2rem; }
+            .question-text { font-size: 0.95rem; }
+            .toggle-btn { padding: 10px; font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Fakten-Check: Grenzkontrolle</h1>
+    <p class="instruction">Basierend auf Dialog 2: Sind diese Aussagen wahr oder falsch?</p>
+
+    <div id="quiz-container">
+        <!-- Fragen werden hier geladen -->
+    </div>
+
+    <div class="controls">
+        <div id="score-display">Punkte: 0 / 8</div>
+        <button class="reset-btn" onclick="initQuiz()">Neu starten</button>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        { text: "Der Passagier fliegt nach Peking.", isTrue: true, info: "" },
+        { text: "Das Reiseziel des Passagiers ist Moskau.", isTrue: false, info: "Ziel: Peking" },
+        { text: "Der Passagier reist aus geschäftlichen Gründen.", isTrue: false, info: "Zweck: Tourismus" },
+        { text: "Der Grund der Reise ist Tourismus.", isTrue: true, info: "" },
+        { text: "Der Passagier wird in einem Hotel wohnen.", isTrue: true, info: "" },
+        { text: "Der Passagier hat keine Buchungsbestätigung dabei.", isTrue: false, info: "Er zeigt die Buchung (Бронь отеля)" },
+        { text: "Der Rückflug ist für den 21. Juli geplant.", isTrue: true, info: "" },
+        { text: "Der Passagier fliegt bereits am 1. Juli zurück.", isTrue: false, info: "Datum: 21. Juli" }
+    ];
+
+    let score = 0;
+
+    function initQuiz() {
+        score = 0;
+        updateScore();
+        const container = document.getElementById('quiz-container');
+        container.innerHTML = '';
+
+        questions.forEach((q, index) => {
+            const item = document.createElement('div');
+            item.className = 'question-card';
+            
+            item.innerHTML = `
+                <span class="question-text">${q.text}</span>
+                <div class="btn-group">
+                    <button class="toggle-btn" onclick="handleChoice(${index}, true, this)">
+                        Wahr
+                        <span>Верно</span>
+                    </button>
+                    <button class="toggle-btn" onclick="handleChoice(${index}, false, this)">
+                        Falsch
+                        <span>Неверно</span>
+                    </button>
+                </div>
+                <div class="correction" id="corr-${index}">${q.info}</div>
+            `;
+            container.appendChild(item);
+        });
+    }
+
+    function handleChoice(qIndex, choice, btn) {
+        const question = questions[qIndex];
+        const parent = btn.parentElement;
+        const buttons = parent.querySelectorAll('.toggle-btn');
+        const correctionDiv = document.getElementById(`corr-${qIndex}`);
+        
+        buttons.forEach(b => b.classList.add('disabled'));
+
+        if (choice === question.isTrue) {
+            btn.classList.add('correct');
+            score++;
+        } else {
+            btn.classList.add('wrong');
+            if (question.info) correctionDiv.style.display = 'block';
+            
+            // Zeige den richtigen Button
+            buttons.forEach(b => {
+                if ((question.isTrue && b.textContent.includes('Wahr')) || 
+                    (!question.isTrue && b.textContent.includes('Falsch'))) {
+                    b.classList.add('correct');
+                }
+            });
+        }
+        updateScore();
+    }
+
+    function updateScore() {
+        document.getElementById('score-display').textContent = `Punkte: ${score} / ${questions.length}`;
+    }
+
+    initQuiz();
+</script>
+
+</body>
+</html>
