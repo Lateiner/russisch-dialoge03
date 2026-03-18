@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Übung: 8er Dokumenten-Check</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --bg-color: #f4f7f9;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --card-bg: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            font-style: normal;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-size: 1.3rem;
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 5px;
+            font-style: normal;
+        }
+
+        .instruction {
+            text-align: center;
+            font-size: 0.85rem;
+            color: #555;
+            margin-bottom: 20px;
+            font-style: normal;
+        }
+
+        .matching-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .column {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .column-header {
+            text-align: center;
+            font-weight: bold;
+            color: var(--primary-color);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 2px solid #ddd;
+            padding: 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease;
+            min-height: 75px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+            user-select: none;
+            line-height: 1.3;
+            font-style: normal;
+        }
+
+        .card:hover:not(.solved) {
+            border-color: var(--accent-color);
+            background: #f1f9ff;
+        }
+
+        .card.selected {
+            border-color: var(--accent-color);
+            background-color: #e1f5fe;
+            transform: scale(1.02);
+        }
+
+        .card.solved {
+            cursor: default;
+            opacity: 0.9;
+        }
+
+        .card.wrong {
+            background-color: #ffebee;
+            border-color: var(--error-color);
+            animation: shake 0.4s;
+        }
+
+        .emoji {
+            font-size: 1.8rem;
+            margin-bottom: 3px;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        #solution-btn { background: #f39c12; color: white; }
+        #reset-btn { background: #95a5a6; color: white; }
+
+        #feedback {
+            text-align: center;
+            margin-top: 15px;
+            font-weight: bold;
+            min-height: 1.2em;
+        }
+
+        @media (max-width: 600px) {
+            .matching-grid { gap: 8px; }
+            .card { font-size: 0.85rem; padding: 8px; min-height: 90px; }
+            .emoji { font-size: 1.5rem; }
+            .controls { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Dokumenten-Check (Zoll & Grenze)</h1>
+    <p class="instruction">
+        Klicke links die Frage und rechts das passende Dokument an.
+    </p>
+
+    <div class="matching-grid">
+        <div class="column">
+            <div class="column-header">Frage des Beamten</div>
+            <div id="questions-col"></div>
+        </div>
+        <div class="column">
+            <div class="column-header">Dokument / Antwort</div>
+            <div id="objects-col"></div>
+        </div>
+    </div>
+
+    <div id="feedback"></div>
+
+    <div class="controls">
+        <button id="solution-btn">Lösung anzeigen</button>
+        <button id="reset-btn">Neu starten</button>
+    </div>
+</div>
+
+<script>
+    // Paare mit individuellen Farben für die Lösung
+    const pairs = [
+        { id: 1, q: "Ваш паспорт, пожалуйста.", a: "Паспорт", emoji: "🛂", color: "#D6EAF8" }, // Blau
+        { id: 2, q: "Цель вашей поездки?", a: "Туризм", emoji: "📸", color: "#D1F2EB" }, // Türkis
+        { id: 3, q: "Где вы будете жить?", a: "Бронь отеля", emoji: "🏨", color: "#FCF3CF" }, // Gelb
+        { id: 4, q: "Когда летите обратно?", a: "21 июля", emoji: "📅", color: "#FADBD8" }, // Rosa
+        { id: 5, q: "Куда вы летите?", a: "В Пекин", emoji: "🇨🇳", color: "#E8DAEF" }, // Lila
+        { id: 6, q: "Откуда вы прилетели?", a: "Из Парижа", emoji: "🇫🇷", color: "#D5DBDB" }, // Grau
+        { id: 7, q: "Покажите вашу визу.", a: "Виза", emoji: "📑", color: "#EAFAF1" }, // Mint
+        { id: 8, q: "Ваш билет, пожалуйста.", a: "Билет", emoji: "🎟️", color: "#FDEBD0" }  // Orange
+    ];
+
+    let selectedQCard = null;
+    let solvedCount = 0;
+
+    function shuffle(array) {
+        return array.sort(() => Math.random() - 0.5);
+    }
+
+    function initGame() {
+        const qCol = document.getElementById('questions-col');
+        const oCol = document.getElementById('objects-col');
+        qCol.innerHTML = '';
+        oCol.innerHTML = '';
+        document.getElementById('feedback').textContent = '';
+        selectedQCard = null;
+        solvedCount = 0;
+
+        const shuffledQs = shuffle([...pairs]);
+        const shuffledAs = shuffle([...pairs]);
+
+        shuffledQs.forEach(pair => {
+            const div = document.createElement('div');
+            div.className = 'card';
+            div.textContent = pair.q;
+            div.dataset.id = pair.id;
+            div.onclick = () => {
+                if(div.classList.contains('solved')) return;
+                document.querySelectorAll('#questions-col .card').forEach(c => c.classList.remove('selected'));
+                div.classList.add('selected');
+                selectedQCard = div;
+            };
+            qCol.appendChild(div);
+        });
+
+        shuffledAs.forEach(pair => {
+            const div = document.createElement('div');
+            div.className = 'card';
+            div.innerHTML = `<div class="emoji">${pair.emoji}</div><div>${pair.a}</div>`;
+            div.dataset.id = pair.id;
+            div.onclick = () => {
+                if(!selectedQCard || div.classList.contains('solved')) return;
+                checkMatch(selectedQCard, div);
+            };
+            oCol.appendChild(div);
+        });
+    }
+
+    function checkMatch(qCard, aCard) {
+        if (qCard.dataset.id === aCard.dataset.id) {
+            const pair = pairs.find(p => p.id == qCard.dataset.id);
+            qCard.classList.remove('selected');
+            qCard.classList.add('solved');
+            aCard.classList.add('solved');
+            
+            // Sofortige farbliche Kennzeichnung des gefundenen Paares
+            qCard.style.backgroundColor = pair.color;
+            qCard.style.borderColor = pair.color;
+            aCard.style.backgroundColor = pair.color;
+            aCard.style.borderColor = pair.color;
+
+            selectedQCard = null;
+            solvedCount++;
+
+            if (solvedCount === pairs.length) {
+                const fb = document.getElementById('feedback');
+                fb.textContent = "Hervorragend! Alles korrekt zugeordnet.";
+                fb.style.color = "var(--success-color)";
+            }
+        } else {
+            qCard.classList.add('wrong');
+            aCard.classList.add('wrong');
+            setTimeout(() => {
+                qCard.classList.remove('wrong', 'selected');
+                aCard.classList.remove('wrong');
+            }, 500);
+            selectedQCard = null;
+        }
+    }
+
+    document.getElementById('solution-btn').onclick = () => {
+        const qCards = document.querySelectorAll('#questions-col .card');
+        const aCards = document.querySelectorAll('#objects-col .card');
+
+        pairs.forEach(pair => {
+            const q = Array.from(qCards).find(c => c.dataset.id == pair.id);
+            const a = Array.from(aCards).find(c => c.dataset.id == pair.id);
+            
+            q.classList.add('solved');
+            a.classList.add('solved');
+            q.style.backgroundColor = pair.color;
+            q.style.borderColor = pair.color;
+            a.style.backgroundColor = pair.color;
+            a.style.borderColor = pair.color;
+        });
+        
+        const fb = document.getElementById('feedback');
+        fb.textContent = "Zusammengehörige Paare sind farbig markiert.";
+        fb.style.color = "#f39c12";
+    };
+
+    document.getElementById('reset-btn').onclick = initGame;
+
+    initGame();
+</script>
+
+</body>
+</html>
