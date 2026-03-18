@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch Lernkartei: Flughafen & Reise</title>
+    <style>
+        :root {
+            --primary-green: #2e7d32;
+            --light-green: #e8f5e9;
+            --accent-green: #4caf50;
+            --dark-green: #1b5e20;
+            --card-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            --text-color: #333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light-green);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        h1 {
+            color: var(--dark-green);
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+        .progress {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--primary-green);
+            background: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        /* Flashcard 3D Structure */
+        .flashcard-container {
+            perspective: 1000px;
+            width: 100%;
+            height: 350px;
+            cursor: pointer;
+        }
+
+        .flashcard-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+            box-shadow: var(--card-shadow);
+            border-radius: 15px;
+        }
+
+        .flashcard-container.flipped .flashcard-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            box-sizing: border-box;
+            border-radius: 15px;
+            background: white;
+            border: 2px solid var(--accent-green);
+        }
+
+        .card-back {
+            transform: rotateY(180deg);
+            background-color: #fafafa;
+        }
+
+        .content-text {
+            font-size: 2.2rem;
+            word-wrap: break-word;
+            max-width: 100%;
+            line-height: 1.2;
+        }
+
+        .label {
+            position: absolute;
+            top: 15px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #888;
+        }
+
+        /* Font-size adjustments for long text */
+        .content-text.small { font-size: 1.6rem; }
+        .content-text.xsmall { font-size: 1.3rem; }
+
+        /* Controls */
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .nav-buttons, .action-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            width: 100%;
+            grid-column: span 2;
+        }
+
+        button {
+            padding: 12px 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background-color: var(--primary-green);
+            color: white;
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        button:hover {
+            background-color: var(--dark-green);
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.secondary {
+            background-color: var(--accent-green);
+        }
+
+        .instructions {
+            margin-top: 20px;
+            font-size: 0.85rem;
+            color: #666;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 480px) {
+            .flashcard-container { height: 280px; }
+            .content-text { font-size: 1.8rem; }
+            button { padding: 10px 12px; font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Russisch Lernkartei</h1>
+        <div class="progress" id="progress">1 / 66</div>
+
+        <div class="flashcard-container" id="cardContainer" tabindex="0">
+            <div class="flashcard-inner">
+                <!-- Vorderseite (Russisch) -->
+                <div class="card-face card-front">
+                    <span class="label">Russisch</span>
+                    <div class="content-text" id="frontText">пассажи́р</div>
+                </div>
+                <!-- Rückseite (Deutsch) -->
+                <div class="card-face card-back">
+                    <span class="label">Deutsch</span>
+                    <div class="content-text" id="backText">Passagier</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="nav-buttons">
+                <button id="prevBtn">← Vorherige</button>
+                <button id="nextBtn">Nächste →</button>
+            </div>
+            <div class="action-buttons">
+                <button class="secondary" id="beginningBtn">An den Anfang</button>
+                <button class="secondary" id="shuffleBtn">Mischen 🔀</button>
+            </div>
+        </div>
+
+        <div class="instructions">
+            Tippe die Karte zum Umdrehen.<br>
+            Tastatur: <b>Leertaste/Enter</b> (Drehen), <b>Pfeiltasten</b> (Navigieren), <b>Pos1</b> (Anfang).
+        </div>
+    </div>
+
+    <script>
+        const rawData = `1. пассажи́р — Passagier
+2. самолёт — Flugzeug
+3. авиакомпа́ния — Fluggesellschaft
+4. Росси́я — Russland
+5. рабо́тник — Mitarbeiter / Angestellter
+6. бага́ж — Gepäck
+7. ручна́я кладь — Handgepäck
+8. па́спорт — Reisepass
+9. ви́за — Visum
+10. биле́т — Ticket
+11. поса́дочный тало́н — Bordkarte
+12. вы́ход — Ausgang / Gate
+13. ме́сто — Platz / Sitzplatz
+14. ме́сто у окна́ — Fensterplatz
+15. ме́сто посереди́не — Mittelplatz
+16. ме́сто у прохо́да — Gangplatz
+17. рейс — Flug / Flugverbindung
+18. прямо́й рейс — Flug ohne Umsteigen
+19. рейс без переса́док — Flug ohne Umsteigen
+20. рейс с переса́дкой — Flug mit Umsteigen
+21. переса́дка — Umsteigen / Zwischenstopp
+22. тамо́жня — Zoll
+23. пограни́чный контро́ль — Grenzkontrolle
+24. цель пое́здки — Reisezweck
+25. тури́зм — Tourismus
+26. оте́ль — Hotel
+27. бронь — Buchung / Reservierung
+28. бронь оте́ля — Hotelbuchung
+29. обра́тно — zurück
+30. Пеки́н — Peking
+31. покупа́ть / купи́ть — kaufen
+32. брони́ровать / заброни́ровать — buchen / reservieren
+33. регистри́роваться / зарегисти́роваться — einchecken / sich registrieren
+34. регистра́ция — Check-in / Registrierung
+35. сто́йка регистра́ции — Check-in-Schalter
+36. взве́шивать / взве́сить — wiegen
+37. опла́чивать / оплати́ть — bezahlen
+38. переве́с — Übergewicht (Gepäck)
+39. опла́та багажа́ — Gepäckbezahlung
+40. сдава́ть / сдать — abgeben / aufgeben (Gepäck)
+41. сда́ча багажа́ — Gepäckaufgabe
+42. проходи́ть / пройти́ — durchlaufen / passieren
+43. лете́ть / полете́ть — fliegen
+44. заде́рживать / задержа́ть — verspäten / aufhalten
+45. заде́ржка ре́йса — Flugverspätung
+46. отменя́ть / отмени́ть — annullieren / absagen
+47. отме́на ре́йса — Flugannullierung
+48. табло́ — Anzeigetafel
+49. отправле́ние — Abflug
+50. прибы́тие — Ankunft
+51. пункт назначе́ния — Zielort
+52. иллюмина́тор — Kabinenfenster
+53. уда́чного полёта! — Guten Flug!
+54. Москвá — Moskau
+55. Пари́ж — Paris
+56. Ки́ев — Kiew
+57. Аэрофло́т — Aeroflot
+58. поса́дка — Boarding / Einsteigen
+59. вы́ход на поса́дку — Flugsteig / Gate zum Boarding
+60. цель — Ziel / Zweck
+61. жи́ть / пожи́ть — wohnen / leben
+62. предпочита́ть / предпоче́сть — bevorzugen
+63. удо́бный — bequem / praktisch
+64. онла́йн — online
+65. чемода́н — Koffer
+66. су́мка — Tasche`;
+
+        // Parse Data
+        let flashcards = rawData.split('\n').map(line => {
+            const parts = line.split('. ')[1].split(' — ');
+            return {
+                front: parts[0].trim(),
+                back: parts[1].trim()
+            };
+        });
+
+        let currentIndex = 0;
+
+        const cardContainer = document.getElementById('cardContainer');
+        const frontText = document.getElementById('frontText');
+        const backText = document.getElementById('backText');
+        const progress = document.getElementById('progress');
+        const nextBtn = document.getElementById('nextBtn');
+        const prevBtn = document.getElementById('prevBtn');
+        const shuffleBtn = document.getElementById('shuffleBtn');
+        const beginningBtn = document.getElementById('beginningBtn');
+
+        function updateCard() {
+            // Reset Flip
+            cardContainer.classList.remove('flipped');
+            
+            setTimeout(() => {
+                const card = flashcards[currentIndex];
+                frontText.textContent = card.front;
+                backText.textContent = card.back;
+                
+                // Adjust font size
+                adjustFontSize(frontText, card.front);
+                adjustFontSize(backText, card.back);
+                
+                progress.textContent = `${currentIndex + 1} / ${flashcards.length}`;
+            }, 150); // Small delay to let card reset if it was flipped
+        }
+
+        function adjustFontSize(element, text) {
+            element.classList.remove('small', 'xsmall');
+            if (text.length > 35) {
+                element.classList.add('xsmall');
+            } else if (text.length > 20) {
+                element.classList.add('small');
+            }
+        }
+
+        function flipCard() {
+            cardContainer.classList.toggle('flipped');
+        }
+
+        function nextCard() {
+            currentIndex = (currentIndex + 1) % flashcards.length;
+            updateCard();
+        }
+
+        function prevCard() {
+            currentIndex = (currentIndex - 1 + flashcards.length) % flashcards.length;
+            updateCard();
+        }
+
+        function shuffleCards() {
+            for (let i = flashcards.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [flashcards[i], flashcards[j]] = [flashcards[j], flashcards[i]];
+            }
+            currentIndex = 0;
+            updateCard();
+        }
+
+        function goToBeginning() {
+            currentIndex = 0;
+            updateCard();
+        }
+
+        // Event Listeners
+        cardContainer.addEventListener('click', flipCard);
+        nextBtn.addEventListener('click', nextCard);
+        prevBtn.addEventListener('click', prevCard);
+        shuffleBtn.addEventListener('click', shuffleCards);
+        beginningBtn.addEventListener('click', goToBeginning);
+
+        // Keyboard Controls
+        document.addEventListener('keydown', (e) => {
+            switch(e.key) {
+                case ' ':
+                case 'Enter':
+                    e.preventDefault(); // Prevent scrolling on Space
+                    flipCard();
+                    break;
+                case 'ArrowRight':
+                    nextCard();
+                    break;
+                case 'ArrowLeft':
+                    prevCard();
+                    break;
+                case 'Home':
+                    goToBeginning();
+                    break;
+            }
+        });
+
+        // Initialize
+        updateCard();
+    </script>
+</body>
+</html>
