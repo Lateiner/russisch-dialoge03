@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Übung: Das Datum-Puzzle</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --bg-color: #fdfefe;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --card-bg: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f3f4;
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            font-style: normal;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-size: 1.3rem;
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 5px;
+            font-style: normal;
+        }
+
+        .instruction {
+            text-align: center;
+            font-size: 0.85rem;
+            color: #555;
+            margin-bottom: 20px;
+            font-style: normal;
+        }
+
+        .matching-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .column {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .column-header {
+            text-align: center;
+            font-weight: bold;
+            color: var(--primary-color);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 2px solid #ddd;
+            padding: 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            user-select: none;
+            line-height: 1.3;
+            font-style: normal;
+        }
+
+        .card:hover:not(.solved) {
+            border-color: var(--accent-color);
+            background: #f1f9ff;
+        }
+
+        .card.selected {
+            border-color: var(--accent-color);
+            background-color: #e1f5fe;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .card.solved {
+            cursor: default;
+            opacity: 0.95;
+            font-weight: bold;
+        }
+
+        .card.wrong {
+            background-color: #ffebee;
+            border-color: var(--error-color);
+            animation: shake 0.4s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        #solution-btn { background: #f39c12; color: white; }
+        #reset-btn { background: #95a5a6; color: white; }
+
+        #feedback {
+            text-align: center;
+            margin-top: 15px;
+            font-weight: bold;
+            min-height: 1.2em;
+        }
+
+        @media (max-width: 500px) {
+            .matching-grid { grid-template-columns: 1fr 1.5fr; gap: 8px; }
+            .card { font-size: 0.9rem; padding: 10px; }
+            .controls { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Das Datum-Puzzle</h1>
+    <p class="instruction">
+        Ordne die numerischen Daten den russischen Zeitangaben zu.<br>
+        <strong>Klicke links eine Zahl und rechts das passende Wort an.</strong>
+    </p>
+
+    <div class="matching-grid">
+        <div class="column">
+            <div class="column-header">Zahlen</div>
+            <div id="numbers-col"></div>
+        </div>
+        <div class="column">
+            <div class="column-header">Russisch (Genitiv)</div>
+            <div id="russian-col"></div>
+        </div>
+    </div>
+
+    <div id="feedback"></div>
+
+    <div class="controls">
+        <button id="solution-btn">Lösung anzeigen</button>
+        <button id="reset-btn">Neu starten</button>
+    </div>
+</div>
+
+<script>
+    // 8 Datums-Paare mit individuellen Farben für die Lösung
+    const datePairs = [
+        { id: 1, num: "21.07.", txt: "Двадцать первого июля", color: "#D6EAF8" },
+        { id: 2, num: "01.05.", txt: "Первого мая", color: "#D1F2EB" },
+        { id: 3, num: "12.06.", txt: "Двенадцатого июня", color: "#FCF3CF" },
+        { id: 4, num: "31.12.", txt: "Тридцать первого декабря", color: "#FADBD8" },
+        { id: 5, num: "08.03.", txt: "Восьмого марта", color: "#E8DAEF" },
+        { id: 6, num: "15.01.", txt: "Пятнадцатого января", color: "#D5DBDB" },
+        { id: 7, num: "20.10.", txt: "Двадцатого октября", color: "#EAFAF1" },
+        { id: 8, num: "04.04.", txt: "Четвертого апреля", color: "#FDEBD0" }
+    ];
+
+    let selectedNumCard = null;
+    let solvedCount = 0;
+
+    function shuffle(array) {
+        return array.sort(() => Math.random() - 0.5);
+    }
+
+    function initGame() {
+        const numCol = document.getElementById('numbers-col');
+        const rusCol = document.getElementById('russian-col');
+        numCol.innerHTML = '';
+        rusCol.innerHTML = '';
+        document.getElementById('feedback').textContent = '';
+        selectedNumCard = null;
+        solvedCount = 0;
+
+        const shuffledNums = shuffle([...datePairs]);
+        const shuffledRus = shuffle([...datePairs]);
+
+        shuffledNums.forEach(pair => {
+            const div = document.createElement('div');
+            div.className = 'card';
+            div.textContent = pair.num;
+            div.dataset.id = pair.id;
+            div.onclick = () => {
+                if(div.classList.contains('solved')) return;
+                document.querySelectorAll('#numbers-col .card').forEach(c => c.classList.remove('selected'));
+                div.classList.add('selected');
+                selectedNumCard = div;
+            };
+            numCol.appendChild(div);
+        });
+
+        shuffledRus.forEach(pair => {
+            const div = document.createElement('div');
+            div.className = 'card';
+            div.textContent = pair.txt;
+            div.dataset.id = pair.id;
+            div.onclick = () => {
+                if(!selectedNumCard || div.classList.contains('solved')) return;
+                checkMatch(selectedNumCard, div);
+            };
+            rusCol.appendChild(div);
+        });
+    }
+
+    function checkMatch(numCard, rusCard) {
+        if (numCard.dataset.id === rusCard.dataset.id) {
+            const pair = datePairs.find(p => p.id == numCard.dataset.id);
+            numCard.classList.remove('selected');
+            numCard.classList.add('solved');
+            rusCard.classList.add('solved');
+            
+            // Paar farblich markieren
+            numCard.style.backgroundColor = pair.color;
+            numCard.style.borderColor = pair.color;
+            rusCard.style.backgroundColor = pair.color;
+            rusCard.style.borderColor = pair.color;
+
+            selectedNumCard = null;
+            solvedCount++;
+
+            if (solvedCount === datePairs.length) {
+                const fb = document.getElementById('feedback');
+                fb.textContent = "Super! Du beherrschst die Daten.";
+                fb.style.color = "var(--success-color)";
+            }
+        } else {
+            numCard.classList.add('wrong');
+            rusCard.classList.add('wrong');
+            setTimeout(() => {
+                numCard.classList.remove('wrong', 'selected');
+                rusCard.classList.remove('wrong');
+            }, 500);
+            selectedNumCard = null;
+        }
+    }
+
+    document.getElementById('solution-btn').onclick = () => {
+        const nCards = document.querySelectorAll('#numbers-col .card');
+        const rCards = document.querySelectorAll('#russian-col .card');
+
+        datePairs.forEach(pair => {
+            const n = Array.from(nCards).find(c => c.dataset.id == pair.id);
+            const r = Array.from(rCards).find(c => c.dataset.id == pair.id);
+            
+            n.classList.add('solved');
+            r.classList.add('solved');
+            n.style.backgroundColor = pair.color;
+            n.style.borderColor = pair.color;
+            r.style.backgroundColor = pair.color;
+            r.style.borderColor = pair.color;
+        });
+        
+        const fb = document.getElementById('feedback');
+        fb.textContent = "Die farbigen Paare gehören zusammen.";
+        fb.style.color = "#f39c12";
+    };
+
+    document.getElementById('reset-btn').onclick = initGame;
+
+    initGame();
+</script>
+
+</body>
+</html>
