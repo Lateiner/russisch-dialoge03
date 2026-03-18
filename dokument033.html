@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Übung: Dokumenten-Scanner</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --bg-color: #f0f4f8;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --card-bg: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            font-style: normal !important;
+        }
+
+        /* Kein Kursiv im gesamten Dokument */
+        * {
+            font-style: normal !important;
+            box-sizing: border-box;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-size: 1.4rem;
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .instruction {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #555;
+            margin-bottom: 25px;
+        }
+
+        .matching-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .column {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .column-header {
+            text-align: center;
+            font-weight: bold;
+            color: var(--primary-color);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 2px solid #ddd;
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease;
+            min-height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            font-weight: bold;
+            user-select: none;
+            line-height: 1.2;
+        }
+
+        .card:hover:not(.solved) {
+            border-color: var(--accent-color);
+            background: #f1f9ff;
+        }
+
+        .card.selected {
+            border-color: var(--accent-color);
+            background-color: #e1f5fe;
+            transform: scale(1.03);
+            z-index: 2;
+        }
+
+        .card.solved {
+            cursor: default;
+            opacity: 0.9;
+            border-style: solid;
+        }
+
+        .card.wrong {
+            background-color: #ffebee;
+            border-color: var(--error-color);
+            animation: shake 0.4s;
+        }
+
+        .emoji {
+            font-size: 2.5rem;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: opacity 0.2s;
+        }
+
+        #solution-btn { background: #f39c12; color: white; }
+        #reset-btn { background: #95a5a6; color: white; }
+
+        #feedback {
+            text-align: center;
+            margin-top: 15px;
+            font-weight: bold;
+            min-height: 1.2em;
+        }
+
+        @media (max-width: 480px) {
+            .matching-grid { gap: 10px; }
+            .card { font-size: 0.85rem; padding: 10px; }
+            .emoji { font-size: 2rem; }
+            .controls { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Dokumenten-Scanner</h1>
+    <p class="instruction">
+        Ordne die russischen Begriffe den richtigen Icons zu.<br>
+        <strong>Tippe ein Wort links und das Bild rechts an.</strong>
+    </p>
+
+    <div class="matching-grid">
+        <div class="column">
+            <div class="column-header">Begriff</div>
+            <div id="words-col"></div>
+        </div>
+        <div class="column">
+            <div class="column-header">Icon</div>
+            <div id="icons-col"></div>
+        </div>
+    </div>
+
+    <div id="feedback"></div>
+
+    <div class="controls">
+        <button id="solution-btn">Lösung anzeigen</button>
+        <button id="reset-btn">Neu mischen</button>
+    </div>
+</div>
+
+<script>
+    const pairs = [
+        { id: 1, word: "Посадочный талон", emoji: "🎫", color: "#D6EAF8" }, // Blau
+        { id: 2, word: "Паспорт", emoji: "🛂", color: "#D1F2EB" },          // Türkis
+        { id: 3, word: "Багаж", emoji: "🧳", color: "#FCF3CF" },           // Gelb
+        { id: 4, word: "Билет", emoji: "🎟️", color: "#FADBD8" }            // Rosa
+    ];
+
+    let selectedWordCard = null;
+    let solvedCount = 0;
+
+    function shuffle(array) {
+        return array.sort(() => Math.random() - 0.5);
+    }
+
+    function initGame() {
+        const wCol = document.getElementById('words-col');
+        const iCol = document.getElementById('icons-col');
+        wCol.innerHTML = '';
+        iCol.innerHTML = '';
+        document.getElementById('feedback').textContent = '';
+        selectedWordCard = null;
+        solvedCount = 0;
+
+        const shuffledWords = shuffle([...pairs]);
+        const shuffledIcons = shuffle([...pairs]);
+
+        shuffledWords.forEach(pair => {
+            const div = document.createElement('div');
+            div.className = 'card';
+            div.textContent = pair.word;
+            div.dataset.id = pair.id;
+            div.onclick = () => {
+                if(div.classList.contains('solved')) return;
+                document.querySelectorAll('#words-col .card').forEach(c => c.classList.remove('selected'));
+                div.classList.add('selected');
+                selectedWordCard = div;
+            };
+            wCol.appendChild(div);
+        });
+
+        shuffledIcons.forEach(pair => {
+            const div = document.createElement('div');
+            div.className = 'card';
+            div.innerHTML = `<div class="emoji">${pair.emoji}</div>`;
+            div.dataset.id = pair.id;
+            div.onclick = () => {
+                if(!selectedWordCard || div.classList.contains('solved')) return;
+                checkMatch(selectedWordCard, div);
+            };
+            iCol.appendChild(div);
+        });
+    }
+
+    function checkMatch(wCard, iCard) {
+        if (wCard.dataset.id === iCard.dataset.id) {
+            const pair = pairs.find(p => p.id == wCard.dataset.id);
+            wCard.classList.remove('selected');
+            wCard.classList.add('solved');
+            iCard.classList.add('solved');
+            
+            wCard.style.backgroundColor = pair.color;
+            wCard.style.borderColor = pair.color;
+            iCard.style.backgroundColor = pair.color;
+            iCard.style.borderColor = pair.color;
+
+            selectedWordCard = null;
+            solvedCount++;
+
+            if (solvedCount === pairs.length) {
+                const fb = document.getElementById('feedback');
+                fb.textContent = "Hervorragend! Du bist bereit zum Boarding.";
+                fb.style.color = "var(--success-color)";
+            }
+        } else {
+            wCard.classList.add('wrong');
+            iCard.classList.add('wrong');
+            setTimeout(() => {
+                wCard.classList.remove('wrong', 'selected');
+                iCard.classList.remove('wrong');
+            }, 500);
+            selectedWordCard = null;
+        }
+    }
+
+    document.getElementById('solution-btn').onclick = () => {
+        const wCards = document.querySelectorAll('#words-col .card');
+        const iCards = document.querySelectorAll('#icons-col .card');
+
+        pairs.forEach(pair => {
+            const w = Array.from(wCards).find(c => c.dataset.id == pair.id);
+            const i = Array.from(iCards).find(c => c.dataset.id == pair.id);
+            
+            w.classList.add('solved');
+            i.classList.add('solved');
+            w.style.backgroundColor = pair.color;
+            w.style.borderColor = pair.color;
+            i.style.backgroundColor = pair.color;
+            i.style.borderColor = pair.color;
+        });
+        
+        const fb = document.getElementById('feedback');
+        fb.textContent = "Paare sind farbig markiert.";
+        fb.style.color = "#f39c12";
+    };
+
+    document.getElementById('reset-btn').onclick = initGame;
+
+    initGame();
+</script>
+
+</body>
+</html>
