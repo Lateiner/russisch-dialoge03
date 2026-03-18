@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Übung: Fragewörter am Zoll</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --bg-color: #f4f7f6;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --text-color: #333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            font-style: normal !important; /* Keine Kursivschrift */
+        }
+
+        * {
+            font-style: normal !important;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 650px;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-size: 1.3rem;
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .instruction {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .quiz-area {
+            background: #fff;
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .question-row {
+            margin-bottom: 15px;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            line-height: 2;
+        }
+
+        .select-wrapper {
+            display: inline-block;
+            position: relative;
+            margin-right: 10px;
+        }
+
+        select {
+            padding: 8px 30px 8px 10px;
+            font-size: 1.05rem;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            background-color: #fff;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.3s;
+            appearance: none;
+            -webkit-appearance: none;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        /* Pfeil-Icon im Dropdown */
+        .select-wrapper::after {
+            content: "▼";
+            font-size: 0.7rem;
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            color: #999;
+        }
+
+        /* Feedback Farben */
+        select.correct {
+            border-color: var(--success-color);
+            background-color: #e8f5e9;
+            color: var(--success-color);
+        }
+
+        select.wrong {
+            border-color: var(--error-color);
+            background-color: #ffebee;
+            color: var(--error-color);
+        }
+
+        .feedback-text {
+            margin-left: 10px;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .controls {
+            margin-top: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        button {
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        #solution-btn { background-color: #f39c12; color: white; }
+        #reset-btn { background-color: #95a5a6; color: white; }
+
+        .translation {
+            display: block;
+            width: 100%;
+            font-size: 0.85rem;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 500px) {
+            .question-row { font-size: 1rem; padding: 10px; }
+            select { font-size: 0.95rem; }
+            .controls { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Fragewörter am Zoll</h1>
+    <p class="instruction">Wählen Sie das richtige Wort. Sie erhalten sofort ein Feedback (✔ oder ✘).</p>
+
+    <div class="quiz-area">
+        <!-- Frage 1 -->
+        <div class="question-row">
+            <div class="select-wrapper">
+                <select data-correct="Куда">
+                    <option value="">...</option>
+                    <option value="Где">Где</option>
+                    <option value="Куда">Куда</option>
+                    <option value="Когда">Когда</option>
+                </select>
+            </div>
+            <span>летите?</span>
+            <span class="feedback-text"></span>
+            <span class="translation">(Wohin fliegen Sie?)</span>
+        </div>
+
+        <!-- Frage 2 -->
+        <div class="question-row">
+            <div class="select-wrapper">
+                <select data-correct="Цель">
+                    <option value="">...</option>
+                    <option value="Бронь">Бронь</option>
+                    <option value="Цель">Цель</option>
+                    <option value="Виза">Виза</option>
+                </select>
+            </div>
+            <span>поездки?</span>
+            <span class="feedback-text"></span>
+            <span class="translation">(Zweck der Reise?)</span>
+        </div>
+
+        <!-- Frage 3 -->
+        <div class="question-row">
+            <div class="select-wrapper">
+                <select data-correct="Где">
+                    <option value="">...</option>
+                    <option value="Когда">Когда</option>
+                    <option value="Куда">Куда</option>
+                    <option value="Где">Где</option>
+                </select>
+            </div>
+            <span>будете жить?</span>
+            <span class="feedback-text"></span>
+            <span class="translation">(Wo werden Sie wohnen?)</span>
+        </div>
+
+        <!-- Frage 4 -->
+        <div class="question-row">
+            <div class="select-wrapper">
+                <select data-correct="Когда">
+                    <option value="">...</option>
+                    <option value="Кто">Кто</option>
+                    <option value="Когда">Когда</option>
+                    <option value="Откуда">Откуда</option>
+                </select>
+            </div>
+            <span>летите обратно?</span>
+            <span class="feedback-text"></span>
+            <span class="translation">(Wann fliegen Sie zurück?)</span>
+        </div>
+
+        <!-- Frage 5 -->
+        <div class="question-row">
+            <div class="select-wrapper">
+                <select data-correct="Ваш">
+                    <option value="">...</option>
+                    <option value="Ваш">Ваш</option>
+                    <option value="Кто">Кто</option>
+                    <option value="Где">Где</option>
+                </select>
+            </div>
+            <span>паспорт, пожалуйста.</span>
+            <span class="feedback-text"></span>
+            <span class="translation">(Ihr Pass, bitte.)</span>
+        </div>
+
+        <!-- Frage 6 -->
+        <div class="question-row">
+            <div class="select-wrapper">
+                <select data-correct="Где">
+                    <option value="">...</option>
+                    <option value="Что">Что</option>
+                    <option value="Когда">Когда</option>
+                    <option value="Где">Где</option>
+                </select>
+            </div>
+            <span>ваша бронь отеля?</span>
+            <span class="feedback-text"></span>
+            <span class="translation">(Wo ist Ihre Hotelbuchung?)</span>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button id="solution-btn">Lösung anzeigen</button>
+        <button id="reset-btn">Zurücksetzen</button>
+    </div>
+</div>
+
+<script>
+    const selects = document.querySelectorAll('select');
+
+    selects.forEach(select => {
+        select.addEventListener('change', function() {
+            const correctValue = this.getAttribute('data-correct');
+            const feedbackIcon = this.parentElement.nextElementSibling.nextElementSibling;
+            
+            this.classList.remove('correct', 'wrong');
+            feedbackIcon.textContent = '';
+
+            if (this.value === "") {
+                // Nichts ausgewählt
+            } else if (this.value === correctValue) {
+                this.classList.add('correct');
+                feedbackIcon.textContent = '✔';
+                feedbackIcon.style.color = 'var(--success-color)';
+            } else {
+                this.classList.add('wrong');
+                feedbackIcon.textContent = '✘';
+                feedbackIcon.style.color = 'var(--error-color)';
+            }
+        });
+    });
+
+    document.getElementById('solution-btn').onclick = () => {
+        selects.forEach(select => {
+            select.value = select.getAttribute('data-correct');
+            select.classList.remove('wrong');
+            select.classList.add('correct');
+            const feedbackIcon = select.parentElement.nextElementSibling.nextElementSibling;
+            feedbackIcon.textContent = '✔';
+            feedbackIcon.style.color = 'var(--success-color)';
+        });
+    };
+
+    document.getElementById('reset-btn').onclick = () => {
+        selects.forEach(select => {
+            select.value = "";
+            select.classList.remove('correct', 'wrong');
+            const feedbackIcon = select.parentElement.nextElementSibling.nextElementSibling;
+            feedbackIcon.textContent = '';
+        });
+    };
+</script>
+
+</body>
+</html>
